@@ -1,0 +1,7 @@
+# Para usar a GPU, instale antes o PyTorch com CUDA (veja o README).
+ultralytics>=8.4
+opencv-python>=4.10
+streamlit>=1.50
+numpy
+requests
+pyyaml

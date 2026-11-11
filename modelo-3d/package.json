@@ -1,0 +1,14 @@
+{
+  "name": "olho-na-via-modelo-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Modelo 3D do dispositivo IoT Olho na Via (three.js): visualizador para a landing page e STL para impressão.",
+  "scripts": {
+    "stl": "node gerar_stl.mjs"
+  },
+  "dependencies": {
+    "manifold-3d": "^3.5.4",
+    "three": "^0.187.0"
+  }
+}

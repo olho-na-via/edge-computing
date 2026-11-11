@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Documentação Técnica · Edge · Olho na Via</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<!-- CAPA -->
+<section class="pagina capa">
+  <div class="faixa-estrada"></div>
+  <div class="linha-topo"><span>FIAP · GLOBAL SOLUTION 2026.2</span><span>EDGE COMPUTING &amp; COMPUTER SYSTEMS</span></div>
+  <div class="logo"><img src="assets/logo-verde.svg" alt="Olho na Via"></div>
+  <div class="titulo">
+    <div class="kicker">CitizenTech IoT · Monitoramento inteligente com ESP32</div>
+    <h1>Documentação<br>Técnica</h1>
+    <p>O dispositivo de borda do Olho na Via: um ESP32 que mede impacto, lâmina d'água, luz e posição, decide o estado da via sozinho e avisa a cidade, com ou sem conexão.</p>
+  </div>
+  <div class="base">
+    <div><b>Erick Nathan Capito Pereira · RM573635</b><br>Engenharia de Software · 1º ano<br>Presencial · Lins · Paulista</div>
+    <div class="dir"><b>São Paulo, novembro de 2026</b><br>Simulação: Wokwi · sketch.ino · diagram.json<br>github.com/ericknathan/olho-na-via</div>
+  </div>
+</section>
+
+<!-- SUMÁRIO E RESUMO -->
+<section class="pagina" data-secao="Sumário e resumo">
+  <div class="grade-2" style="gap:26px">
+    <div>
+      <div class="rotulo">Conteúdo</div>
+      <h1 style="font-size:28px;margin-bottom:12px">Sumário</h1>
+      <div class="sumario-lista">
+        <div class="i">—</div><div class="t">Resumo e entregáveis</div><div class="p">02</div>
+        <div class="i">01</div><div class="t">Problema e cidadão</div><div class="p">03</div>
+        <div class="i">02</div><div class="t">Arquitetura em 3 camadas</div><div class="p">04</div>
+        <div class="i">03</div><div class="t">Do hardware planejado ao simulado</div><div class="p">05</div>
+        <div class="i">04</div><div class="t">Circuito e mapa de pinos</div><div class="p">06</div>
+        <div class="i">05</div><div class="t">Lógica de borda: limites e estados</div><div class="p">07</div>
+        <div class="i">06</div><div class="t">Comunicação MQTT e FIWARE</div><div class="p">09</div>
+        <div class="i">07</div><div class="t">Organização do código</div><div class="p">10</div>
+        <div class="i">08</div><div class="t">Roteiro de testes e do vídeo</div><div class="p">11</div>
+        <div class="i">09</div><div class="t">Do protótipo à montagem física</div><div class="p">12</div>
+        <div class="i">—</div><div class="t">Conclusão, rubrica e referências</div><div class="p">13</div>
+      </div>
+    </div>
+    <div>
+      <div class="rotulo">Resumo</div>
+      <h1 style="font-size:28px;margin-bottom:10px">Em uma página</h1>
+      <p>Buracos, alagamentos e semáforos apagados só entram na fila de reparo de São Paulo quando alguém reclama. O <b>Olho na Via</b> instala um dispositivo IoT em ônibus e nos veículos de voluntários para que a própria rua avise a Prefeitura.</p>
+      <p>Esta entrega é o <b>sensor</b> do projeto: um ESP32 simulado no Wokwi que lê <b>acelerômetro</b>, <b>ultrassom</b>, <b>luz</b>, <b>GPS</b> e <b>bateria</b>, suaviza as leituras, descarta valores inválidos e escolhe entre <b>4 estados</b>. A resposta é local (LEDs, buzzer, LCD e “foto”) e acontece mesmo <b>sem rede</b>.</p>
+      <p>Com conexão, os eventos seguem por <b>MQTT</b> no padrão UltraLight do <b>FIWARE</b> até o painel do gestor e o app do cidadão. Sem conexão, ficam numa <b>fila offline</b> e são enviados quando a rede volta.</p>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div><div class="v">4 estados</div><div class="d">NORMAL, ATENÇÃO, CRÍTICO e FALHA, cada um com resposta própria</div></div>
+    <div><div class="v">100 ms</div><div class="d">ciclo de leitura com <code style="background:none;color:#D6E2CC">millis()</code>, sem travar o loop</div></div>
+    <div><div class="v">5 + 3</div><div class="d">leituras na média móvel e leituras seguidas para confirmar o estado</div></div>
+    <div><div class="v">10 eventos</div><div class="d">guardados na fila offline enquanto o veículo está sem cobertura</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="rotulo">Entregáveis da disciplina</div>
+    <table class="tabela-compacta" style="margin:4px 0 0">
+      <tr><th style="width:30%">Arquivo ou link</th><th>O que contém</th></tr>
+      <tr><td><b>Projeto no Wokwi</b> (link público)</td><td>Simulação completa: abre e roda sem ajustes. Usa a rede <code>Wokwi-GUEST</code> e o broker público <code>broker.hivemq.com</code>.</td></tr>
+      <tr><td><code>sketch.ino</code></td><td>Firmware do ESP32: leitura, suavização, máquina de estados, alertas, MQTT e fila offline.</td></tr>
+      <tr><td><code>diagram.json</code></td><td>Circuito: ESP32, MPU-6050, HC-SR04, LDR, LCD I2C, LEDs, buzzer, chaves, botão e potenciômetro.</td></tr>
+      <tr><td><code>libraries.txt</code></td><td>Bibliotecas: Adafruit MPU6050, LiquidCrystal I2C e PubSubClient.</td></tr>
+      <tr><td><b>Vídeo no YouTube</b> (até 7 min)</td><td>Ideia, circuito, lógica e simulação comentada; roteiro na seção 08.</td></tr>
+      <tr><td><code>COMPONENTES.md</code> · <code>ROTEIRO_VIDEO.md</code></td><td>Lista de montagem física, briefing de renderização 3D e roteiro do vídeo com falas e ações.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 01 PROBLEMA -->
+<section class="pagina" data-secao="01 · Problema e cidadão">
+  <div class="cab-secao"><div class="n">01</div><div><div class="kicker">Problema e conexão com a CitizenTech</div><h1>A rua avisa antes de alguém precisar reclamar</h1></div></div>
+
+  <p class="lead">Em 2025, o SP156 recebeu <b>113,1 mil pedidos de tapa-buraco</b>, e 38% dos pedidos do 1º semestre de 2026 ainda estavam sem atendimento em agosto. Enchentes e alagamentos subiram <b>47%</b> em 2025 e as falhas em semáforos chegaram a <b>17,5 mil por ano</b>. Em todos os casos, o reparo começa só quando alguém reclama.</p>
+
+  <div class="faixa"><b>O problema em uma frase:</b> buracos, alagamentos e semáforos apagados só entram na fila de reparo quando alguém reclama, e ninguém confere se o conserto foi feito.</div>
+
+  <div class="grade-3" style="margin-top:10px">
+    <div class="card"><div class="rotulo">Quem é o cidadão</div><h4>Quem usa a rua todo dia</h4><p>Passageiros, pedestres (principalmente idosos), ciclistas e motociclistas, que são os mais expostos a cada defeito. Do outro lado, a gestora da subprefeitura, que precisa saber o que é mais grave.</p></div>
+    <div class="card"><div class="rotulo">Onde o dispositivo fica</div><h4>Ônibus e Kit Cidadão</h4><p>Atrás do para-brisa dos ônibus que já circulam pela cidade, ligado nos 24 V do veículo. A versão <b>Kit Cidadão</b>, com bateria, vai no carro ou na moto de voluntários (taxistas, entregadores).</p></div>
+    <div class="card"><div class="rotulo">Por que na borda</div><h4>A rede falha onde o problema está</h4><p>Túnel, garagem, enchente e periferia com 4G fraco. O dispositivo decide e reage sozinho, guarda o evento e envia quando a cobertura volta.</p></div>
+  </div>
+
+  <div class="sub"><span class="tag">1.1</span> O que o dispositivo resolve, sensor por sensor</div>
+  <table>
+    <tr><th style="width:24%">Problema na rua</th><th style="width:26%">Como o sensor percebe</th><th>O que o sistema faz</th></tr>
+    <tr><td><b>Buraco e afundamento</b></td><td>Pico de aceleração vertical no MPU-6050 quando a roda cai no buraco</td><td>Registra o ponto (ATENÇÃO) ou abre pré-chamado com foto e GPS (CRÍTICO)</td></tr>
+    <tr><td><b>Alagamento</b></td><td>Ultrassom HC-SR04 voltado para o chão mede a lâmina d'água</td><td>Acima de 15 cm, gera alerta para cidadãos, ambulâncias e a Defesa Civil</td></tr>
+    <tr><td><b>Semáforo apagado</b></td><td>LDR sem luz por mais de 10 s no cruzamento</td><td>Pré-chamado para a CET com a posição do cruzamento</td></tr>
+    <tr><td><b>Problema que o sensor não vê</b></td><td>Botão do Kit Cidadão</td><td>O voluntário reporta com um toque; a câmera registra a foto</td></tr>
+  </table>
+
+  <div class="grade-2" style="margin-top:8px">
+    <div class="card verde">
+      <div class="rotulo">ODS atendidos</div>
+      <div class="ods"><span>ODS 11</span><span>ODS 9</span><span>ODS 3</span><span>ODS 13</span></div>
+      <p style="margin-top:7px;font-size:11.3px"><b>11</b> cidades sustentáveis (zeladoria contínua) · <b>9</b> infraestrutura resiliente · <b>3</b> segurança viária (meta 3.6) · <b>13</b> adaptação a chuvas extremas.</p>
+    </div>
+    <div class="card">
+      <div class="rotulo">Indicadores que o dispositivo alimenta</div>
+      <ul class="lista" style="font-size:11.3px;margin:0">
+        <li>% de problemas detectados antes de qualquer reclamação (meta ≥ 60%)</li>
+        <li>Tempo entre a detecção e o reparo confirmado (meta: de 6 para 3 dias)</li>
+        <li>% de reparos verificados por imagem na 1ª passagem (meta 90%)</li>
+      </ul>
+    </div>
+  </div>
+  <p class="nota" style="margin-top:6px">Dados de contexto: Sumário Executivo do Olho na Via, seção 2 (SMSUB, Prefeitura de São Paulo, CET e CGE).</p>
+</section>
+
+<!-- 02 ARQUITETURA -->
+<section class="pagina" data-secao="02 · Arquitetura">
+  <div class="cab-secao"><div class="n">02</div><div><div class="kicker">Arquitetura em 3 camadas</div><h1>Do sensor no ônibus ao celular do cidadão</h1></div></div>
+
+  <p class="lead">O briefing pede device IoT, back-end FIWARE e aplicação. O dispositivo é a única camada que precisa funcionar sozinha: ele mede, decide e alerta no local. As outras camadas transformam o evento em chamado, prioridade e aviso.</p>
+
+  <div class="camadas">
+    <div class="camada borda">
+      <div class="rotulo">Camada 1 · esta entrega</div>
+      <h4>Dispositivo IoT (borda)</h4>
+      <ul>
+        <li>ESP32 lê 5 grandezas a cada 100 ms</li>
+        <li>média móvel, validação e confirmação</li>
+        <li>máquina de 4 estados</li>
+        <li>LEDs, buzzer, LCD e foto</li>
+        <li>fila offline de 10 eventos</li>
+      </ul>
+    </div>
+    <div class="seta">→</div>
+    <div class="camada">
+      <div class="rotulo">Camada 2</div>
+      <h4>Back-end FIWARE</h4>
+      <ul>
+        <li>broker MQTT (Mosquitto)</li>
+        <li>IoT Agent UltraLight</li>
+        <li>Orion Context Broker (NGSI)</li>
+        <li>STH-Comet para histórico</li>
+        <li>deduplicação e Índice de Prioridade</li>
+      </ul>
+    </div>
+    <div class="seta">→</div>
+    <div class="camada">
+      <div class="rotulo">Camada 3</div>
+      <h4>Aplicações</h4>
+      <ul>
+        <li>painel do gestor (fila priorizada)</li>
+        <li>app do cidadão (React)</li>
+        <li>alertas de via alagada</li>
+        <li>dados abertos por subprefeitura</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sub"><span class="tag">2.1</span> O ciclo que roda dentro do ESP32</div>
+  <div class="ciclo">
+    <div class="passo"><div class="n">1</div><h4>Medir</h4><p>Impacto vertical, lâmina d'água, luz, bateria, sinal de GPS e de rede.</p></div>
+    <div class="passo"><div class="n">2</div><h4>Decidir</h4><p>Valida cada leitura, suaviza, compara com os limites e confirma o estado.</p></div>
+    <div class="passo"><div class="n">3</div><h4>Alertar</h4><p>LED da cor do estado, buzzer no CRÍTICO, mensagem e valor no LCD.</p></div>
+    <div class="passo"><div class="n">4</div><h4>Atuar</h4><p>Captura a foto, monta o evento com GPS e envia ou guarda na fila.</p></div>
+  </div>
+
+  <div class="sub"><span class="tag">2.2</span> Online e offline</div>
+  <div class="grade-2">
+    <div class="card verde">
+      <h4>Com rede</h4>
+      <p>Telemetria a cada 5 s e um evento a cada mudança de estado no tópico <code>/TEF/olhonavia001/attrs</code>. O IoT Agent converte o UltraLight em atributos da entidade no Orion, e o painel lê o contexto atualizado.</p>
+      <p>O dispositivo também escuta <code>/TEF/olhonavia001/cmd</code>: o gestor pode pedir uma foto remota do ponto.</p>
+    </div>
+    <div class="card">
+      <h4>Sem rede</h4>
+      <p>Os LEDs, o buzzer e o LCD continuam reagindo, porque a decisão é local. Cada evento vai para a <b>fila offline</b> (o LCD mostra <code>OFF F3</code>, por exemplo).</p>
+      <p>Quando a conexão volta, a fila é enviada na ordem em que os eventos aconteceram. Se encher, o evento mais antigo sai para dar lugar ao novo.</p>
+    </div>
+  </div>
+
+  <div class="faixa" style="margin-top:10px"><b>Por que só eventos?</b> Enviar vídeo de mil ônibus pelo 4G seria caro e arriscado para a privacidade. Do dispositivo sobem apenas estado, motivo, medidas, posição e o nome de uma foto já anonimizada na borda (rostos e placas desfocados).</div>
+</section>
+
+<!-- 03 HARDWARE -->
+<section class="pagina" data-secao="03 · Hardware">
+  <div class="cab-secao"><div class="n">03</div><div><div class="kicker">Do hardware planejado ao simulado</div><h1>Cada peça do Wokwi representa uma peça real</h1></div></div>
+
+  <p>O dispositivo físico foi planejado com <b>ESP32</b>, <b>ESP32-CAM</b>, <b>MPU-6050</b>, placa <b>TTGO T-Beam</b> (bateria, GPS e LoRa) e um <b>painel LCD</b>. O Wokwi não tem câmera, GPS, LoRa nem bateria, então cada recurso ausente foi trocado por um componente que mostra o mesmo comportamento na simulação.</p>
+
+  <table>
+    <tr><th style="width:21%">Recurso real</th><th style="width:25%">No Wokwi</th><th>Como o recurso aparece na simulação</th></tr>
+    <tr><td><b>ESP32</b> (DevKit)</td><td><span class="pill p-verde">igual</span> ESP32 DevKit C v4</td><td>Processa tudo: leitura, decisão, alertas e comunicação.</td></tr>
+    <tr><td><b>MPU-6050</b></td><td><span class="pill p-verde">igual</span> MPU-6050 (I2C 0x68)</td><td>O controle <i>accelZ</i> simula a roda caindo no buraco; o giroscópio vai na telemetria.</td></tr>
+    <tr><td><b>Painel LCD</b></td><td><span class="pill p-verde">igual</span> LCD 16×2 I2C (0x27)</td><td>Linha 1: estado e rede. Linha 2: motivo e valor medido.</td></tr>
+    <tr><td><b>ESP32-CAM</b></td><td><span class="pill p-azul">substituto</span> LED azul + botão</td><td>O LED azul pisca como o flash a cada foto. O botão é o reporte manual do voluntário. A foto recebe um nome (<code>foto_3</code>) que segue no evento.</td></tr>
+    <tr><td><b>GPS</b> do T-Beam</td><td><span class="pill p-azul">substituto</span> chave deslizante + rota</td><td>Coordenadas de uma rota real na Av. Paulista, avançando a cada 5 s. A chave para baixo simula a perda de sinal.</td></tr>
+    <tr><td><b>LoRa / 4G</b> do T-Beam</td><td><span class="pill p-azul">substituto</span> Wi-Fi + chave “rede”</td><td>O Wi-Fi do Wokwi leva o MQTT ao broker. A chave corta a cobertura para mostrar a fila offline.</td></tr>
+    <tr><td><b>Bateria 18650</b> do T-Beam</td><td><span class="pill p-azul">substituto</span> potenciômetro</td><td>Representa a carga de 0 a 100%. Abaixo de 15%, o estado vai para FALHA.</td></tr>
+    <tr><td>Nível d'água</td><td><span class="pill p-amarelo">adicionado</span> HC-SR04</td><td>Ultrassom a 50 cm do chão, voltado para baixo: lâmina = 50 − distância.</td></tr>
+    <tr><td>Luz do semáforo</td><td><span class="pill p-amarelo">adicionado</span> LDR (módulo)</td><td>Na versão final, a câmera e a IA fazem isso; no protótipo, o LDR mede a luz do cruzamento.</td></tr>
+    <tr><td>Alertas locais</td><td><span class="pill p-amarelo">adicionado</span> 4 LEDs, buzzer, 4 resistores de 220 Ω</td><td>Verde, amarelo e vermelho mostram o estado; o buzzer toca no CRÍTICO.</td></tr>
+  </table>
+
+  <div class="sub"><span class="tag">3.1</span> Por que cada componente está ali</div>
+  <div class="grade-2">
+    <div class="card">
+      <h4>Sensores: o que a rua “sente”</h4>
+      <ul class="lista" style="font-size:11.3px;margin:0">
+        <li><b>MPU-6050:</b> o buraco aparece como um pico de aceleração vertical, sem depender de imagem nem de luz.</li>
+        <li><b>HC-SR04:</b> mede distância sem contato com a água, o que serve para lâmina d'água.</li>
+        <li><b>LDR:</b> é a forma mais simples de saber se há luz no semáforo.</li>
+        <li><b>GPS e bateria:</b> sem posição o evento não vale; sem bateria o kit para.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Interface: o que as pessoas veem e ouvem</h4>
+      <ul class="lista" style="font-size:11.3px;margin:0">
+        <li><b>LEDs:</b> um olhar basta para saber o estado, inclusive para o motorista.</li>
+        <li><b>Buzzer:</b> só no CRÍTICO, para não virar ruído na rotina.</li>
+        <li><b>LCD:</b> mostra o motivo e o valor, útil para o técnico e para o vídeo.</li>
+        <li><b>Botão:</b> dá voz ao voluntário quando o sensor não vê o problema.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 04 CIRCUITO -->
+<section class="pagina" data-secao="04 · Circuito">
+  <div class="cab-secao"><div class="n">04</div><div><div class="kicker">Circuito e mapa de pinos</div><h1>Ligações organizadas por função</h1></div></div>
+
+  <div class="figura" id="circuito"></div>
+  <p class="legenda">Figura 1 · Ligações do <code>diagram.json</code>, com as mesmas posições do Wokwi. Sensores à esquerda e embaixo; barramento I2C, LCD, LEDs e buzzer à direita. Vermelho: 3,3 V · magenta: 5 V · preto: GND · laranja e roxo: SDA e SCL · verde: sinais.</p>
+
+  <table class="tabela-compacta">
+    <tr><th style="width:24%">Componente</th><th style="width:24%">Pino do componente</th><th style="width:16%">ESP32</th><th>Observação</th></tr>
+    <tr><td>MPU-6050 e LCD 16×2</td><td>SDA · SCL · VCC · GND</td><td>21 · 22 · 3V3 · GND</td><td>Mesmo barramento I2C (endereços 0x68 e 0x27)</td></tr>
+    <tr><td>HC-SR04</td><td>TRIG · ECHO · VCC · GND</td><td>13 · 14 · 5V · GND</td><td>Montado de cabeça para baixo, olhando o chão</td></tr>
+    <tr><td>LDR (módulo)</td><td>AO · VCC · GND</td><td>34 · 3V3 · GND</td><td>Entrada analógica do ADC1 (funciona com Wi-Fi)</td></tr>
+    <tr><td>Potenciômetro (bateria)</td><td>SIG · VCC · GND</td><td>35 · 3V3 · GND</td><td>ADC1; leitura de 0 a 4095 vira 0 a 100%</td></tr>
+    <tr><td>Chave GPS · chave rede</td><td>pino 2 · pino 1</td><td>32 · 33 / GND</td><td><code>INPUT_PULLUP</code>: para cima = ligado</td></tr>
+    <tr><td>Botão “Reportar”</td><td>1.r · 2.l</td><td>25 / GND</td><td><code>INPUT_PULLUP</code>, detecção de borda de descida</td></tr>
+    <tr><td>LEDs verde · amarelo · vermelho · azul</td><td>ânodo via 220 Ω · cátodo</td><td>19 · 18 · 5 · 17 / GND</td><td>Azul = flash da câmera</td></tr>
+    <tr><td>Buzzer</td><td>+ · −</td><td>16 / GND</td><td><code>tone()</code> a 1 kHz, intermitente</td></tr>
+  </table>
+  <p class="nota">Os únicos três cruzamentos são inevitáveis pela ordem fixa dos pinos dos módulos: SDA e SCL invertidos entre ESP32 e LCD, e a alimentação do LDR e do potenciômetro.</p>
+</section>
+
+<!-- 05 LÓGICA 1 -->
+<section class="pagina" data-secao="05 · Lógica de borda">
+  <div class="cab-secao"><div class="n">05</div><div><div class="kicker">Lógica de borda</div><h1>Limites justificados e quatro estados</h1></div></div>
+
+  <p>Os limites são <b>iniciais</b>, escolhidos para a simulação a partir do uso real de cada grandeza. No piloto, serão recalibrados com dados dos ônibus (tipo de veículo, velocidade e suspensão). Todos estão em constantes no início do <code>sketch.ino</code>.</p>
+
+  <table>
+    <tr><th style="width:22%">Grandeza</th><th style="width:22%">Limites</th><th>Justificativa</th></tr>
+    <tr><td><b>Impacto</b> |Δaz|<br><span class="nota">aceleração vertical − 1 g</span></td><td>ATENÇÃO ≥ 0,4 g<br>CRÍTICO ≥ 1,0 g</td><td>Parado ou em asfalto liso, o eixo Z mede 1 g. Abaixo de 0,4 g de variação ficam as vibrações comuns do veículo; acima de 1,0 g, a roda caiu num buraco capaz de derrubar uma moto. Valores iniciais, a calibrar no piloto.</td></tr>
+    <tr><td><b>Lâmina d'água</b><br><span class="nota">50 cm − distância</span></td><td>ATENÇÃO 5 a 15 cm<br>CRÍTICO &gt; 15 cm</td><td>Com 5 cm a água já cobre a sarjeta e esconde buracos. A partir de 15 cm, a altura de um meio-fio, a via passa a ser perigosa para motos, carros pequenos e pedestres. É o gatilho de alerta definido no Sumário Executivo.</td></tr>
+    <tr><td><b>Luz</b> do semáforo</td><td>&lt; 30% por mais de 10 s</td><td>Um semáforo funcionando sempre tem uma lâmpada acesa. Sombras e o próprio ônibus escurecem o sensor por poucos segundos; 10 s seguidos sem luz indicam semáforo apagado. Durante a contagem, o estado é ATENÇÃO.</td></tr>
+    <tr><td><b>Bateria</b></td><td>&lt; 15% = FALHA</td><td>Reserva para enviar a fila offline e avisar a central antes de desligar.</td></tr>
+    <tr><td><b>Faixa física</b> (validação)</td><td>|az| ≤ 8 g · 2 a 400 cm</td><td>Fora da escala do MPU-6050 ou do alcance do HC-SR04, ou sem eco, a leitura é descartada e não entra na média.</td></tr>
+  </table>
+
+  <div class="sub"><span class="tag">5.1</span> Estados e respostas</div>
+  <table>
+    <tr><th style="width:14%">Estado</th><th style="width:30%">Quando acontece</th><th style="width:28%">Resposta local</th><th>Ação no sistema</th></tr>
+    <tr><td><span class="estado e-normal">NORMAL</span></td><td>Impacto &lt; 0,4 g, água &lt; 5 cm e luz presente</td><td>LED verde; LCD com impacto, água e luz</td><td>Só telemetria a cada 5 s</td></tr>
+    <tr><td><span class="estado e-atencao">ATENÇÃO</span></td><td>Impacto de 0,4 a 1,0 g, água de 5 a 15 cm ou luz fraca contando os 10 s</td><td>LED amarelo; LCD “Irregular”, “Agua na via” ou “Luz fraca”</td><td>Evento <code>registro_ponto</code>: aguarda 2ª confirmação</td></tr>
+    <tr><td><span class="estado e-critico">CRÍTICO</span></td><td>Impacto ≥ 1,0 g, água &gt; 15 cm ou semáforo apagado há 10 s</td><td>LED vermelho, buzzer intermitente, flash da câmera</td><td>Evento <code>pre_chamado</code> com foto, GPS e motivo</td></tr>
+    <tr><td><span class="estado e-falha">FALHA</span></td><td>Sensor sem resposta, leitura fora da faixa, GPS sem sinal ou bateria &lt; 15%</td><td>LED amarelo piscando; LCD com a causa</td><td>Evento <code>falha_sensor</code>; leituras inválidas descartadas</td></tr>
+  </table>
+  <p class="nota">Prioridade da decisão: FALHA vem primeiro (sem dado confiável não há decisão), depois CRÍTICO, ATENÇÃO e NORMAL. Entre as causas críticas, a ordem é buraco, alagamento e semáforo.</p>
+</section>
+
+<!-- 05 LÓGICA 2 -->
+<section class="pagina" data-secao="05 · Lógica de borda">
+  <div class="sub" style="margin-top:0"><span class="tag">5.2</span> Leitura inválida, suavização e confirmação</div>
+  <div class="grade-3">
+    <div class="card"><div class="rotulo">Validar</div><h4>Descartar o que não é físico</h4><p style="font-size:11.3px">Cada sensor tem uma flag (<code>impactoValido</code>, <code>aguaValida</code>). Sem resposta do MPU-6050, valor fora da escala ou ultrassom sem eco, a leitura não entra na média e o estado vai para FALHA. O MPU-6050 é reconectado a cada 5 s.</p></div>
+    <div class="card"><div class="rotulo">Suavizar</div><h4>Média móvel de 5 leituras</h4><p style="font-size:11.3px">Três vetores guardam as últimas 5 leituras de impacto, água e luz (0,5 s). A função <code>calcularMedia()</code> soma e divide. Uma vibração isolada não muda a média o suficiente para mudar o estado.</p></div>
+    <div class="card"><div class="rotulo">Confirmar</div><h4>3 leituras seguidas</h4><p style="font-size:11.3px">O novo estado vira “candidato” e só é aceito depois de 3 leituras iguais (0,3 s). É uma histerese no tempo: evita o LED piscando e eventos repetidos quando o valor fica perto do limite.</p></div>
+  </div>
+
+  <div class="sub"><span class="tag">5.3</span> O loop, sem <code>delay()</code></div>
+  <div class="grade-2" style="grid-template-columns:1.15fr .85fr">
+    <div class="fluxo">
+      <div class="etapa"><div class="t">Sempre</div><div>Verifica o botão (borda de descida + 300 ms), atualiza LEDs e buzzer e chama <code>mqtt.loop()</code>.</div></div>
+      <div class="etapa"><div class="t">100 ms</div><div><code>lerSensores()</code> → <code>decidirEstado()</code> → <code>confirmarEstado()</code>. Se confirmou, <code>mudarEstado()</code> registra o evento.</div></div>
+      <div class="etapa"><div class="t">250 ms</div><div><code>atualizarLcd()</code>: estado, rede e tamanho da fila na linha 1; motivo e valor na linha 2.</div></div>
+      <div class="etapa"><div class="t">5 s</div><div>Avança o GPS na rota, tenta (re)conectar o MQTT, envia a fila e publica a telemetria.</div></div>
+      <div class="etapa"><div class="t">Evento</div><div><code>registrarEvento()</code> monta a mensagem e publica, ou guarda na fila se estiver offline.</div></div>
+    </div>
+    <div class="card verde">
+      <div class="rotulo">Por que millis()</div>
+      <p style="font-size:11.3px">Cada tarefa compara <code>millis()</code> com o último instante em que rodou. Assim a leitura não espera o LCD, o buzzer não trava o botão e a reconexão não congela os alertas.</p>
+      <p style="font-size:11.3px">Os únicos atrasos são de microssegundos: o pulso de 10 µs do HC-SR04 e a espera do eco, limitada a 30 ms em <code>pulseIn()</code>.</p>
+    </div>
+  </div>
+
+  <div class="sub"><span class="tag">5.4</span> Trecho central: a decisão</div>
+<pre class="codigo"><span class="k">int</span> decidirEstado() {
+  <span class="k">if</span> (!impactoValido) { motivo = <span class="s">"acelerometro"</span>; mensagemLcd = <span class="s">"Falha IMU"</span>; <span class="k">return</span> FALHA; }
+  <span class="k">if</span> (!aguaValida) { motivo = <span class="s">"sensor_agua"</span>; mensagemLcd = <span class="s">"Falha ultrassom"</span>; <span class="k">return</span> FALHA; }
+  <span class="k">if</span> (!gpsComSinal) { motivo = <span class="s">"gps_sem_sinal"</span>; mensagemLcd = <span class="s">"GPS sem sinal"</span>; <span class="k">return</span> FALHA; }
+  <span class="k">if</span> (bateria &lt; BATERIA_MINIMA) { motivo = <span class="s">"bateria_baixa"</span>; ... <span class="k">return</span> FALHA; }
+
+  <span class="k">if</span> (impacto &gt;= IMPACTO_CRITICO) { motivo = <span class="s">"buraco"</span>; ... <span class="k">return</span> CRITICO; }
+  <span class="k">if</span> (agua &gt; AGUA_CRITICO) { motivo = <span class="s">"alagamento"</span>; ... <span class="k">return</span> CRITICO; }
+  <span class="k">if</span> (tempoEscuro &gt;= TEMPO_SEMAFORO_APAGADO) { motivo = <span class="s">"semaforo_apagado"</span>; ... <span class="k">return</span> CRITICO; }
+  <span class="k">if</span> (impacto &gt;= IMPACTO_ATENCAO) { motivo = <span class="s">"irregularidade"</span>; ... <span class="k">return</span> ATENCAO; }
+  <span class="k">if</span> (agua &gt;= AGUA_ATENCAO) { motivo = <span class="s">"agua_na_via"</span>; ... <span class="k">return</span> ATENCAO; }
+  <span class="k">if</span> (tempoEscuro &gt; 0) { motivo = <span class="s">"luz_fraca"</span>; ... <span class="k">return</span> ATENCAO; }
+  motivo = <span class="s">"via_ok"</span>;
+  <span class="k">return</span> NORMAL;
+}</pre>
+</section>
+
+<!-- 06 COMUNICAÇÃO -->
+<section class="pagina" data-secao="06 · Comunicação">
+  <div class="cab-secao"><div class="n">06</div><div><div class="kicker">Comunicação MQTT e FIWARE</div><h1>Uma linha de texto por evento</h1></div></div>
+
+  <p>As mensagens usam o formato <b>UltraLight 2.0</b> do IoT Agent do FIWARE (pares <code>chave|valor</code>) e o padrão de tópicos das aulas, <code>/TEF/&lt;dispositivo&gt;/attrs</code>. No Wokwi, o broker é o público <code>broker.hivemq.com:1883</code>; para o FIWARE, basta trocar <code>MQTT_SERVIDOR</code> pelo IP do Mosquitto da VM.</p>
+
+<pre class="codigo"><span class="c">tópico  /TEF/olhonavia001/attrs</span>
+ev|pre_chamado|s|CRITICO|m|buraco|i|1.20|h|0.0|l|76|b|88|g|0.0|la|-23.561414|lo|-46.655881|f|foto_3|t|42</pre>
+
+  <div class="grade-2" style="grid-template-columns:1.1fr .9fr">
+    <table class="tabela-compacta">
+      <tr><th style="width:15%">Chave</th><th style="width:30%">Atributo</th><th>Conteúdo</th></tr>
+      <tr><td><code>ev</code></td><td>evento</td><td><code>telemetria</code>, <code>registro_ponto</code>, <code>pre_chamado</code>, <code>falha_sensor</code>, <code>via_normalizada</code>, <code>reporte_manual</code>, <code>foto_remota</code></td></tr>
+      <tr><td><code>s</code> · <code>m</code></td><td>estado · motivo</td><td>NORMAL… FALHA · buraco, alagamento…</td></tr>
+      <tr><td><code>i</code></td><td>impacto (g)</td><td>média de |Δaz|</td></tr>
+      <tr><td><code>h</code></td><td>lâmina d'água (cm)</td><td>média de 5 leituras</td></tr>
+      <tr><td><code>l</code> · <code>b</code></td><td>luz · bateria (%)</td><td>0 a 100</td></tr>
+      <tr><td><code>g</code></td><td>giroscópio Z (°/s)</td><td>curvas e manobras, para calibrar</td></tr>
+      <tr><td><code>la</code> · <code>lo</code></td><td>latitude · longitude</td><td>6 casas decimais</td></tr>
+      <tr><td><code>f</code> · <code>t</code></td><td>foto · tempo (s)</td><td>última foto · segundos desde o boot</td></tr>
+    </table>
+    <div>
+      <div class="card" style="margin-bottom:8px">
+        <div class="rotulo">Comando remoto</div>
+        <p style="font-size:11.2px">Publicar <code>olhonavia001@foto|</code> em <code>/TEF/olhonavia001/cmd</code> faz o dispositivo capturar uma foto, enviar o evento <code>foto_remota</code> e responder <code>olhonavia001@foto|ok</code> em <code>/cmdexe</code>, como o IoT Agent espera.</p>
+      </div>
+      <div class="card verde">
+        <div class="rotulo">Fila offline</div>
+        <p style="font-size:11.2px">Vetor <code>filaOffline[10]</code> de <code>String</code>. Sem rede, cada evento entra no fim; cheia, o mais antigo sai. Ao reconectar, <code>enviarFila()</code> publica tudo em ordem. A telemetria periódica não entra na fila: só eventos importam.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub"><span class="tag">6.1</span> Provisionamento no IoT Agent (camada 2)</div>
+<pre class="codigo" style="font-size:8.6px"><span class="c">POST http://&lt;ip-da-vm&gt;:4041/iot/devices   fiware-service: smart   fiware-servicepath: /</span>
+{ <span class="s">"devices"</span>: [{
+  <span class="s">"device_id"</span>: <span class="s">"olhonavia001"</span>, <span class="s">"entity_name"</span>: <span class="s">"urn:ngsi-ld:OlhoNaVia:001"</span>, <span class="s">"entity_type"</span>: <span class="s">"OlhoNaVia"</span>,
+  <span class="s">"protocol"</span>: <span class="s">"PDI-IoTA-UltraLight"</span>, <span class="s">"transport"</span>: <span class="s">"MQTT"</span>,
+  <span class="s">"commands"</span>: [{ <span class="s">"name"</span>: <span class="s">"foto"</span>, <span class="s">"type"</span>: <span class="s">"command"</span> }],
+  <span class="s">"attributes"</span>: [
+    { <span class="s">"object_id"</span>: <span class="s">"ev"</span>, <span class="s">"name"</span>: <span class="s">"evento"</span>, <span class="s">"type"</span>: <span class="s">"Text"</span> }, { <span class="s">"object_id"</span>: <span class="s">"s"</span>, <span class="s">"name"</span>: <span class="s">"estado"</span>, <span class="s">"type"</span>: <span class="s">"Text"</span> },
+    { <span class="s">"object_id"</span>: <span class="s">"m"</span>, <span class="s">"name"</span>: <span class="s">"motivo"</span>, <span class="s">"type"</span>: <span class="s">"Text"</span> }, { <span class="s">"object_id"</span>: <span class="s">"i"</span>, <span class="s">"name"</span>: <span class="s">"impacto"</span>, <span class="s">"type"</span>: <span class="s">"Float"</span> },
+    { <span class="s">"object_id"</span>: <span class="s">"h"</span>, <span class="s">"name"</span>: <span class="s">"laminaAgua"</span>, <span class="s">"type"</span>: <span class="s">"Float"</span> }, { <span class="s">"object_id"</span>: <span class="s">"l"</span>, <span class="s">"name"</span>: <span class="s">"luz"</span>, <span class="s">"type"</span>: <span class="s">"Integer"</span> },
+    { <span class="s">"object_id"</span>: <span class="s">"b"</span>, <span class="s">"name"</span>: <span class="s">"bateria"</span>, <span class="s">"type"</span>: <span class="s">"Integer"</span> }, { <span class="s">"object_id"</span>: <span class="s">"g"</span>, <span class="s">"name"</span>: <span class="s">"giroscopio"</span>, <span class="s">"type"</span>: <span class="s">"Float"</span> },
+    { <span class="s">"object_id"</span>: <span class="s">"la"</span>, <span class="s">"name"</span>: <span class="s">"latitude"</span>, <span class="s">"type"</span>: <span class="s">"Float"</span> }, { <span class="s">"object_id"</span>: <span class="s">"lo"</span>, <span class="s">"name"</span>: <span class="s">"longitude"</span>, <span class="s">"type"</span>: <span class="s">"Float"</span> },
+    { <span class="s">"object_id"</span>: <span class="s">"f"</span>, <span class="s">"name"</span>: <span class="s">"foto"</span>, <span class="s">"type"</span>: <span class="s">"Text"</span> }, { <span class="s">"object_id"</span>: <span class="s">"t"</span>, <span class="s">"name"</span>: <span class="s">"tempoAtivo"</span>, <span class="s">"type"</span>: <span class="s">"Integer"</span> }
+  ] }] }</pre>
+  <p class="nota">O grupo de serviço do IoT Agent usa a apikey <code>TEF</code>, a mesma dos tópicos. Com isso, o Orion mantém a entidade <code>OlhoNaVia:001</code> sempre atualizada para o painel e o app.</p>
+</section>
+
+<!-- 07 CÓDIGO -->
+<section class="pagina" data-secao="07 · Código">
+  <div class="cab-secao"><div class="n">07</div><div><div class="kicker">Organização do código</div><h1>Funções curtas, nomes que se explicam</h1></div></div>
+
+  <p>O <code>sketch.ino</code> segue o que vimos em aula: constantes no topo, variáveis globais, <code>setup()</code>, <code>loop()</code> com <code>millis()</code> e uma função para cada tarefa, cada uma com um comentário curto dizendo o que faz. Sem classes próprias e sem bibliotecas além das listadas no <code>libraries.txt</code>. Esta tabela é o guia de leitura do código.</p>
+
+  <table class="tabela-compacta">
+    <tr><th style="width:27%">Função</th><th>O que faz</th></tr>
+    <tr><td><code>setup()</code></td><td>Configura pinos, LCD, MPU-6050, Wi-Fi e MQTT; imprime projeto e equipe no Serial.</td></tr>
+    <tr><td><code>loop()</code></td><td>Agenda as tarefas de 100 ms, 250 ms e 5 s com <code>millis()</code>.</td></tr>
+    <tr><td><code>lerSensores()</code></td><td>Chama as leituras e avança a posição da média móvel.</td></tr>
+    <tr><td><code>lerAcelerometro()</code> · <code>lerSensorAgua()</code></td><td>Leem MPU-6050 e HC-SR04, validam a faixa física e guardam na média.</td></tr>
+    <tr><td><code>lerLuz()</code> · <code>lerBateria()</code> · <code>lerChaves()</code></td><td>LDR em %, contagem do tempo no escuro, bateria em %, GPS e rede.</td></tr>
+    <tr><td><code>calcularMedia()</code></td><td>Soma o vetor de 5 leituras e divide por 5.</td></tr>
+    <tr><td><code>decidirEstado()</code></td><td>Compara as médias com os limites e define estado, motivo e texto do LCD.</td></tr>
+    <tr><td><code>confirmarEstado()</code> · <code>mudarEstado()</code></td><td>Exigem 3 leituras iguais; na troca, registram o evento e disparam a foto no CRÍTICO.</td></tr>
+    <tr><td><code>capturarFoto()</code> · <code>verificarBotao()</code></td><td>Flash do LED azul e nome da foto; reporte manual do voluntário.</td></tr>
+    <tr><td><code>registrarEvento()</code> · <code>montarMensagem()</code></td><td>Montam o UltraLight e decidem entre publicar e guardar na fila.</td></tr>
+    <tr><td><code>guardarNaFila()</code> · <code>enviarFila()</code></td><td>Fila offline de 10 posições.</td></tr>
+    <tr><td><code>verificarConexao()</code> · <code>receberComando()</code></td><td>Reconexão sem travar o loop; comando remoto de foto.</td></tr>
+    <tr><td><code>enviarTelemetria()</code> · <code>avancarGps()</code></td><td>Linha completa no Serial e no MQTT a cada 5 s; próximo ponto da rota.</td></tr>
+    <tr><td><code>atualizarAlertas()</code> · <code>atualizarLcd()</code></td><td>LEDs, buzzer intermitente e as duas linhas do display.</td></tr>
+  </table>
+
+  <div class="sub"><span class="tag">7.1</span> Saída no Serial Monitor (exemplo)</div>
+<pre class="codigo">Olho na Via - Dispositivo IoT de borda v1.0
+Erick Nathan Capito Pereira - RM573635
+[IMU] MPU-6050 conectado
+[MQTT] Conectando ao broker...
+[MQTT] Conectado. Publicando em /TEF/olhonavia001/attrs
+<span class="c">[TELEMETRIA] estado=NORMAL impacto=0.00g agua=0.0cm luz=76% bateria=88% giro=0.0graus/s temp=24.0C gps=-23.558103,-46.660010 rede=online fila=0</span>
+<span class="k">[ESTADO] NORMAL -> CRITICO | motivo: buraco</span>
+[CAMERA] foto_1 capturada e anonimizada (rostos e placas desfocados)
+[MQTT] ev|pre_chamado|s|CRITICO|m|buraco|i|1.20|h|0.0|l|76|b|88|g|0.0|la|-23.558103|lo|-46.660010|f|foto_1|t|9
+[REDE] Sem cobertura. Eventos vao para a fila offline.
+[OFFLINE] Evento guardado na fila (1/10)</pre>
+  <p class="nota">O nome do integrante está no código (<code>EQUIPE</code>) e aparece no Serial a cada inicialização, como pede o briefing.</p>
+</section>
+
+<!-- 08 TESTES -->
+<section class="pagina" data-secao="08 · Testes e vídeo">
+  <div class="cab-secao"><div class="n">08</div><div><div class="kicker">Roteiro de testes e do vídeo</div><h1>Todos os estados, um controle de cada vez</h1></div></div>
+
+  <p>Clique em cada componente durante a simulação para abrir o controle. Volte o controle ao valor inicial antes do teste seguinte. As mudanças levam cerca de 0,5 s para aparecer por causa da média móvel e da confirmação.</p>
+
+  <table class="tabela-compacta">
+    <tr><th style="width:4%">#</th><th style="width:31%">Ação no Wokwi</th><th style="width:15%">Estado</th><th>O que deve acontecer</th></tr>
+    <tr><td>1</td><td>Iniciar a simulação (valores iniciais)</td><td><span class="estado e-normal">NORMAL</span></td><td>LED verde; LCD “NORMAL ONLINE” após a conexão; telemetria a cada 5 s</td></tr>
+    <tr><td>2</td><td>MPU-6050: <i>accelZ</i> = 1,6 g</td><td><span class="estado e-atencao">ATENÇÃO</span></td><td>LED amarelo; LCD “Irregular 0.60g”; evento <code>registro_ponto</code></td></tr>
+    <tr><td>3</td><td>MPU-6050: <i>accelZ</i> = −0,5 g</td><td><span class="estado e-critico">CRÍTICO</span></td><td>LED vermelho, buzzer, flash azul; LCD “Buraco 1.50g”; <code>pre_chamado</code> com foto</td></tr>
+    <tr><td>4</td><td>HC-SR04: <i>distance</i> = 42 cm</td><td><span class="estado e-atencao">ATENÇÃO</span></td><td>LCD “Agua na via 8cm”</td></tr>
+    <tr><td>5</td><td>HC-SR04: <i>distance</i> = 30 cm</td><td><span class="estado e-critico">CRÍTICO</span></td><td>LCD “Alagado 20cm”; alerta de via alagada</td></tr>
+    <tr><td>6</td><td>LDR: <i>lux</i> = 5 e esperar 10 s</td><td>ATENÇÃO → CRÍTICO</td><td>LCD conta “Luz fraca 1s… 9s” e muda para “Semaforo apagado”</td></tr>
+    <tr><td>7</td><td>Chave GPS para baixo</td><td><span class="estado e-falha">FALHA</span></td><td>LED amarelo piscando; LCD “GPS sem sinal”; posição congelada</td></tr>
+    <tr><td>8</td><td>Potenciômetro abaixo de 15%</td><td><span class="estado e-falha">FALHA</span></td><td>LCD “Bateria 9%”, por exemplo</td></tr>
+    <tr><td>9</td><td>Chave rede para baixo e repetir os testes 2 e 3</td><td>qualquer</td><td>LCD “OFF F2”; Serial “[OFFLINE] Evento guardado”; LEDs e buzzer seguem funcionando</td></tr>
+    <tr><td>10</td><td>Chave rede para cima</td><td>—</td><td>Em até 5 s: reconecta, “[OFFLINE] Enviando 2 evento(s)” e “ONLINE”</td></tr>
+    <tr><td>11</td><td>Apertar o botão “Reportar”</td><td>—</td><td>Flash azul; evento <code>reporte_manual</code> com foto e GPS</td></tr>
+    <tr><td>12</td><td>Publicar <code>olhonavia001@foto|</code> no tópico <code>/cmd</code></td><td>—</td><td>Foto remota e resposta em <code>/cmdexe</code> (HiveMQ Web Client)</td></tr>
+  </table>
+
+  <div class="sub"><span class="tag">8.1</span> Roteiro sugerido para o vídeo (até 7 min)</div>
+  <div class="grade-4">
+    <div class="card"><div class="rotulo">0:00 · 1:00</div><h4>A ideia</h4><p style="font-size:11px">Cidadão, problema em uma frase, ônibus e Kit Cidadão, ODS 11, 9, 3 e 13 (seção 01).</p></div>
+    <div class="card"><div class="rotulo">1:00 · 2:30</div><h4>O circuito</h4><p style="font-size:11px">Cada componente e por que está ali; o que substitui câmera, GPS, LoRa e bateria (seções 03 e 04).</p></div>
+    <div class="card"><div class="rotulo">2:30 · 4:00</div><h4>A lógica</h4><p style="font-size:11px">Limites, média móvel, confirmação, validação e o trecho de <code>decidirEstado()</code> (seção 05).</p></div>
+    <div class="card"><div class="rotulo">4:00 · 7:00</div><h4>A simulação</h4><p style="font-size:11px">Testes 1 a 12 com o Serial e o LCD visíveis, terminando com a fila offline.</p></div>
+  </div>
+</section>
+
+<!-- 09 MONTAGEM -->
+<section class="pagina" data-secao="09 · Montagem física">
+  <div class="cab-secao"><div class="n">09</div><div><div class="kicker">Do protótipo à montagem física</div><h1>O mesmo código, com as peças reais</h1></div></div>
+
+  <p>A lógica de estados não muda na montagem física. Mudam a origem de alguns dados e alguns cuidados elétricos. A lista completa de peças, com quantidades e o briefing de renderização 3D, está em <code>COMPONENTES.md</code>.</p>
+
+  <table class="tabela-compacta">
+    <tr><th style="width:24%">Peça</th><th style="width:38%">Na montagem física</th><th>Cuidado</th></tr>
+    <tr><td><b>TTGO T-Beam</b> (915 MHz)</td><td>GPS real (NEO-6M ou NEO-M8N), LoRa SX1276 e bateria 18650 com carregador. Pode ser o próprio cérebro do dispositivo, já que tem um ESP32.</td><td>Faixa de 915 MHz homologada pela Anatel; antenas conectadas antes de ligar o rádio</td></tr>
+    <tr><td><b>ESP32-CAM</b> (OV2640)</td><td>Recebe o comando de foto do ESP32 principal pela serial (UART) e grava no cartão microSD.</td><td>Fonte de 5 V com pelo menos 2 A no pico do flash</td></tr>
+    <tr><td><b>HC-SR04</b></td><td>No ônibus, trocar pelo JSN-SR04T, à prova d'água, sob o para-choque.</td><td>ECHO em 5 V: usar divisor 1 kΩ / 2 kΩ até o ESP32</td></tr>
+    <tr><td><b>LCD 16×2 I2C</b></td><td>Alimentado em 5 V para o contraste e o backlight.</td><td>Conferir os resistores de pull-up do módulo I2C (3,3 V no ESP32)</td></tr>
+    <tr><td><b>Alimentação</b></td><td>Ônibus: conversor DC-DC 24 V → 5 V automotivo com fusível. Kit Cidadão: bateria 18650 do T-Beam.</td><td>Proteção contra inversão de polaridade e picos da partida</td></tr>
+    <tr><td><b>Gabinete</b></td><td>Impressão 3D em PETG, ventosa no para-brisa, janelas para câmera, LCD e LEDs.</td><td>Não bloquear a visão do motorista; nada que distraia ao volante</td></tr>
+  </table>
+
+  <div class="grade-2" style="margin-top:6px">
+    <div class="card">
+      <div class="rotulo">Limitações do protótipo</div>
+      <ul class="lista" style="font-size:11.2px;margin:0">
+        <li>A câmera é simulada: o evento leva o nome da foto, não a imagem.</li>
+        <li>GPS em rota fixa; na rua, as coordenadas vêm do módulo real.</li>
+        <li>A média móvel atenua picos muito curtos; na versão final, o impacto usa o valor de pico da janela.</li>
+        <li>Limites calibrados para a simulação, não para um ônibus real.</li>
+      </ul>
+    </div>
+    <div class="card verde">
+      <div class="rotulo">Próximos passos</div>
+      <ul class="lista" style="font-size:11.2px;margin:0">
+        <li>Montar o protótipo físico e gravar uma volta de ônibus para calibrar os limites.</li>
+        <li>Subir o FIWARE na VM e trocar o broker público pelo IoT Agent.</li>
+        <li>Ligar o painel do gestor (React) à entidade <code>OlhoNaVia</code> no Orion.</li>
+        <li>Detecção de buracos por imagem (IA) para confirmar o acelerômetro.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="faixa" style="margin-top:10px"><b>Privacidade por padrão:</b> a câmera olha o asfalto, não as pessoas. Rostos e placas são desfocados no próprio dispositivo, e só sobem a foto anonimizada e os dados do evento. Não há reconhecimento facial nem leitura de placas.</div>
+</section>
+
+<!-- CONCLUSÃO -->
+<section class="pagina" data-secao="Conclusão e referências">
+  <div class="cab-secao"><div class="n" style="font-size:40px">—</div><div><div class="kicker">Conclusão</div><h1>Um sensor que decide sozinho e ajuda o bairro inteiro</h1></div></div>
+
+  <p class="lead">O dispositivo transforma um ônibus que já passa pela rua num fiscal da cidade. Ele percebe o buraco, a água e o semáforo apagado, decide na hora, avisa quem está perto e, quando há rede, entrega à Prefeitura um evento com posição, gravidade e foto. Sem rede, nada se perde.</p>
+
+  <div class="sub"><span class="tag">✓</span> Onde está cada critério da avaliação</div>
+  <table class="tabela-compacta">
+    <tr><th style="width:30%">Critério (pontos)</th><th>Onde encontrar</th></tr>
+    <tr><td><b>Problema e conexão com a CitizenTech</b> (15)</td><td>Seção 01: cidadão, problema em uma frase, ODS e o que cada sensor resolve</td></tr>
+    <tr><td><b>Circuito</b> (20)</td><td>Seções 03 e 04: componentes, substituições, mapa de pinos e diagrama sem cruzamentos desnecessários</td></tr>
+    <tr><td><b>Lógica de borda</b> (25)</td><td>Seção 05: limites justificados, 4 estados com respostas distintas, leitura inválida, média móvel e confirmação</td></tr>
+    <tr><td><b>Qualidade do código</b> (15)</td><td>Seção 07: funções, constantes, <code>millis()</code>, comentários e saída no Serial Monitor</td></tr>
+    <tr><td><b>Vídeo</b> (25)</td><td>Seção 08: roteiro de 12 testes cobrindo todos os estados e roteiro de 7 minutos</td></tr>
+  </table>
+
+  <div class="sub"><span class="tag">R</span> Referências</div>
+  <ul class="lista" style="font-size:11px">
+    <li>FIAP. <i>Global Solution 2026.2: CitizenTech</i>, briefing do 1º ano de Engenharia de Software, disciplina Edge Computing &amp; Computer Systems.</li>
+    <li>Olho na Via. <i>Sumário Executivo</i>, versão 1.0, nov. 2026 (seções 2, 5.1, 5.2 e 6), com os dados da SMSUB, CET, CGE e Prefeitura de São Paulo.</li>
+    <li>Wokwi. <i>Documentação de peças</i>: ESP32 DevKit C v4, MPU6050, HC-SR04, Photoresistor sensor, LCD1602 e guia de Wi-Fi do ESP32. docs.wokwi.com.</li>
+    <li>FIWARE Foundation. <i>IoT Agent for the UltraLight 2.0 protocol</i> e <i>Orion Context Broker</i>. fiware.org.</li>
+    <li>InvenSense. <i>MPU-6000 and MPU-6050 Product Specification</i>, rev. 3.4.</li>
+    <li>ERIKSSON, J. et al. <i>The Pothole Patrol: using a mobile sensor network for road surface monitoring</i>. MobiSys, 2008.</li>
+    <li>Bibliotecas: Adafruit MPU6050, LiquidCrystal I2C e PubSubClient (Arduino Library Manager).</li>
+  </ul>
+
+  <div class="card verde" style="margin-top:8px">
+    <div class="rotulo">Como gerar este PDF de novo</div>
+    <p style="font-size:11.2px;margin:0">Na pasta <code>documentacao</code>: <code>pip install playwright</code>, <code>python -m playwright install chromium</code> e <code>python gerar_pdf.py</code>. O script injeta a figura <code>figuras/circuito.svg</code>, confere se algum conteúdo passou da página e exporta o PDF para a pasta do projeto.</p>
+  </div>
+</section>
+
+<script>
+  const paginas = document.querySelectorAll('.pagina');
+  let n = 0;
+  paginas.forEach((p) => {
+    n += 1;
+    if (p.classList.contains('capa')) return;
+    const topo = document.createElement('div');
+    topo.className = 'topo';
+    topo.innerHTML = '<div class="marca"><img src="assets/icone-claro.svg" alt="">OLHO NA VIA · DOCUMENTAÇÃO TÉCNICA EDGE</div><div>' + (p.dataset.secao || '') + '</div>';
+    const rodape = document.createElement('div');
+    rodape.className = 'rodape';
+    rodape.innerHTML = '<div>Edge Computing &amp; Computer Systems · Global Solution 2026.2 · Erick Nathan Capito Pereira · RM573635</div><div class="num">' + String(n).padStart(2, '0') + '</div>';
+    p.appendChild(topo);
+    p.appendChild(rodape);
+  });
+  window.__pronto = true;
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+@font-face {
+  font-family: "Urbanist";
+  src: url("assets/Urbanist-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+}
+
+:root {
+  --verde: #72C000;
+  --verde-texto: #4E8A00;
+  --verde-claro: #EEF7E1;
+  --verde-borda: #DCEBC6;
+  --escuro: #16230E;
+  --escuro-2: #24321B;
+  --fundo: #F7FAFC;
+  --branco: #FFFFFF;
+  --borda: #E4E9E2;
+  --zebra: #FAFCF7;
+  --texto: #16230E;
+  --texto-2: #46523F;
+  --texto-3: #6F7A69;
+  --critico: #C2352B;
+  --critico-bg: #FDE9E6;
+  --alto: #9A5B00;
+  --alto-bg: #FEF1D6;
+  --ok: #3F7300;
+  --ok-bg: #E8F5D6;
+  --falha: #4A5560;
+  --falha-bg: #ECEFF1;
+  --azul: #2A62C9;
+  --azul-bg: #EAF1FB;
+}
+
+@page { size: 210mm 297mm; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #3b4436;
+  font-family: "Urbanist", "Segoe UI", sans-serif;
+  color: var(--texto);
+  font-size: 12.4px;
+  line-height: 1.5;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.pagina {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto 24px;
+  background: var(--fundo);
+  position: relative;
+  overflow: hidden;
+  padding: 17mm 16mm 18mm;
+  page-break-after: always;
+  break-after: page;
+}
+@media print { body { background: none; } .pagina { margin: 0; } }
+
+.topo {
+  position: absolute; top: 9mm; left: 16mm; right: 16mm;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--borda); padding-bottom: 2.4mm;
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--texto-3);
+}
+.topo .marca { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--escuro); letter-spacing: .06em; }
+.topo .marca img { height: 13px; }
+.rodape {
+  position: absolute; bottom: 8mm; left: 16mm; right: 16mm;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 9.5px; color: var(--texto-3);
+}
+.rodape .num { background: var(--verde); color: var(--escuro); font-weight: 800; border-radius: 999px; padding: 2px 10px; font-size: 10px; }
+
+h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -.01em; }
+p { margin: 0 0 7px; }
+b, strong { font-weight: 750; }
+
+.cab-secao { display: flex; gap: 18px; align-items: flex-start; margin: 2mm 0 5mm; }
+.cab-secao .n { font-size: 50px; line-height: .9; font-weight: 900; color: var(--verde); letter-spacing: -.04em; }
+.cab-secao .kicker { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--verde-texto); font-weight: 800; margin-bottom: 3px; }
+.cab-secao h1 { font-size: 27px; line-height: 1.12; }
+
+.lead { font-size: 15px; line-height: 1.5; color: var(--escuro); margin-bottom: 9px; }
+.sub { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; margin: 12px 0 6px; }
+.sub .tag { background: var(--verde); color: var(--escuro); font-size: 10px; border-radius: 6px; padding: 2px 6px; font-weight: 800; }
+.rotulo { font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--verde-texto); font-weight: 800; margin-bottom: 5px; }
+
+.grade-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grade-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.grade-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+
+.card { background: var(--branco); border: 1px solid var(--borda); border-radius: 14px; padding: 11px 13px; }
+.card h4 { font-size: 13px; margin-bottom: 4px; }
+.card p:last-child { margin-bottom: 0; }
+.card.verde { background: var(--verde-claro); border-color: var(--verde-borda); }
+.card .rotulo { margin-bottom: 4px; }
+
+.faixa {
+  background: var(--escuro); color: #fff; border-radius: 14px; padding: 12px 16px;
+  border-left: 5px solid var(--verde); margin: 9px 0;
+}
+.faixa b { color: var(--verde); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: var(--escuro); border-radius: 16px; padding: 15px 18px; color: #fff; margin: 10px 0; }
+.kpis .v { font-size: 27px; font-weight: 900; color: var(--verde); line-height: 1.05; letter-spacing: -.02em; }
+.kpis .d { font-size: 10.5px; color: #D6E2CC; line-height: 1.35; margin-top: 3px; }
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--branco); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; font-size: 11.3px; margin: 4px 0 8px; }
+th { background: var(--escuro); color: #fff; text-align: left; font-weight: 700; padding: 6px 9px; font-size: 10.6px; }
+td { padding: 5.5px 9px; border-top: 1px solid var(--borda); vertical-align: top; line-height: 1.38; }
+tr:nth-child(even) td { background: var(--zebra); }
+td code, p code, li code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 10.3px; background: var(--verde-claro); border-radius: 4px; padding: 0 3px; color: var(--escuro); }
+.tabela-compacta td { padding: 4px 8px; }
+
+.estado { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.estado::before { content: ""; width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.e-normal::before { background: var(--verde); }
+.e-atencao::before { background: #F2B705; }
+.e-critico::before { background: var(--critico); }
+.e-falha::before { background: #7D8790; }
+
+.pill { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 10px; font-weight: 800; }
+.p-verde { background: var(--ok-bg); color: var(--ok); }
+.p-amarelo { background: var(--alto-bg); color: var(--alto); }
+.p-azul { background: var(--azul-bg); color: var(--azul); }
+.p-vermelho { background: var(--critico-bg); color: var(--critico); }
+.p-cinza { background: var(--falha-bg); color: var(--falha); }
+
+ul.lista { margin: 0 0 6px; padding-left: 0; list-style: none; }
+ul.lista li { position: relative; padding-left: 15px; margin-bottom: 3px; }
+ul.lista li::before { content: ""; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--verde); }
+
+pre.codigo {
+  background: var(--escuro); color: #E8F2DC; border-radius: 12px; padding: 10px 13px; margin: 6px 0 8px;
+  font-family: Consolas, "Cascadia Mono", monospace; font-size: 9.8px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+}
+pre.codigo .c { color: var(--verde); }
+pre.codigo .k { color: #F2C14E; }
+pre.codigo .s { color: #9FD3FF; }
+
+.camadas { display: grid; grid-template-columns: 1fr 26px 1fr 26px 1fr; align-items: stretch; margin: 8px 0 10px; }
+.camada { background: var(--branco); border: 1px solid var(--borda); border-radius: 14px; padding: 11px 12px; }
+.camada.borda { background: var(--escuro); color: #fff; border-color: var(--escuro); }
+.camada.borda .rotulo { color: var(--verde); }
+.camada h4 { font-size: 14px; margin-bottom: 5px; }
+.camada ul { margin: 0; padding-left: 14px; font-size: 11px; }
+.seta { display: flex; align-items: center; justify-content: center; color: var(--verde-texto); font-weight: 900; font-size: 18px; }
+
+.ciclo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 8px; }
+.ciclo .passo { background: var(--branco); border: 1px solid var(--borda); border-radius: 12px; padding: 9px 11px; position: relative; }
+.ciclo .passo .n { font-size: 20px; font-weight: 900; color: var(--verde); line-height: 1; }
+.ciclo .passo h4 { font-size: 12.5px; margin: 3px 0 2px; }
+.ciclo .passo p { font-size: 10.8px; margin: 0; color: var(--texto-2); }
+
+.fluxo { display: grid; grid-template-columns: 1fr; gap: 5px; }
+.fluxo .etapa { display: grid; grid-template-columns: 74px 1fr; gap: 10px; align-items: center; background: var(--branco); border: 1px solid var(--borda); border-radius: 10px; padding: 6px 10px; font-size: 11.2px; }
+.fluxo .etapa .t { font-weight: 800; color: var(--verde-texto); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
+
+.figura { background: var(--branco); border: 1px solid var(--borda); border-radius: 14px; padding: 8px; margin: 6px 0 4px; }
+.figura svg { width: 100%; height: auto; display: block; font-family: "Urbanist", sans-serif; }
+.legenda { font-size: 10px; color: var(--texto-3); margin: 3px 2px 8px; }
+
+.ods { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.ods span { background: var(--escuro); color: var(--verde); font-weight: 800; border-radius: 8px; padding: 3px 8px; font-size: 10.5px; }
+
+.sumario-lista { display: grid; grid-template-columns: 26px 1fr 24px; row-gap: 5px; font-size: 12.3px; }
+.sumario-lista .i { color: var(--verde-texto); font-weight: 800; }
+.sumario-lista .t { font-weight: 650; }
+.sumario-lista .p { text-align: right; font-weight: 700; color: var(--texto-2); }
+.sumario-lista > div { border-bottom: 1px solid var(--borda); padding-bottom: 4px; }
+
+.capa { background: var(--verde); padding: 0; }
+.capa .faixa-estrada { position: absolute; top: 0; bottom: 0; right: 10mm; width: 9px;
+  background: repeating-linear-gradient(to bottom, #5EA000 0 22mm, transparent 22mm 32mm); opacity: .75; }
+.capa .linha-topo { position: absolute; top: 12mm; left: 16mm; right: 26mm; display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .3em; font-weight: 800; color: var(--escuro); }
+.capa .logo { position: absolute; top: 58mm; left: 0; right: 0; text-align: center; }
+.capa .logo img { width: 112mm; }
+.capa .titulo { position: absolute; top: 152mm; left: 16mm; right: 30mm; }
+.capa .titulo .kicker { font-size: 9.5px; letter-spacing: .28em; font-weight: 800; color: var(--escuro); text-transform: uppercase; margin-bottom: 10px; }
+.capa .titulo h1 { font-size: 46px; line-height: 1.02; color: var(--escuro); font-weight: 900; letter-spacing: -.02em; }
+.capa .titulo p { font-size: 15.5px; color: var(--escuro); margin-top: 14px; line-height: 1.45; max-width: 150mm; }
+.capa .base { position: absolute; bottom: 14mm; left: 16mm; right: 26mm; display: flex; justify-content: space-between; font-size: 10.5px; color: var(--escuro); line-height: 1.5; }
+.capa .base b { font-weight: 800; }
+.capa .base .dir { text-align: right; }
+
+.nota { font-size: 10.3px; color: var(--texto-3); }
+.destaque { color: var(--verde-texto); font-weight: 800; }

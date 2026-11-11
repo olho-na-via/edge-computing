@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olho na Via · Dispositivo IoT em 3D</title>
+<style>
+  @font-face { font-family: "Urbanist"; src: url("assets/Urbanist-VariableFont_wght.ttf") format("truetype"); font-weight: 100 900; }
+  :root { --verde: #72C000; --verde-texto: #4E8A00; --escuro: #16230E; --fundo: #F7FAFC; --borda: #E4E9E2; --texto-2: #46523F; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Urbanist", system-ui, sans-serif; color: var(--escuro); background: var(--fundo); }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 22px 6vw; }
+  header img { height: 34px; }
+  header span { font-size: 12px; letter-spacing: .22em; font-weight: 800; text-transform: uppercase; color: var(--verde-texto); }
+
+  .hero { display: grid; grid-template-columns: minmax(320px, 0.85fr) 1.4fr; gap: 3vw; padding: 1vw 6vw 3vw; align-items: center; }
+  .kicker { font-size: 12px; letter-spacing: .24em; font-weight: 800; text-transform: uppercase; color: var(--verde-texto); }
+  h1 { font-size: clamp(34px, 4.2vw, 58px); line-height: 1.02; margin: 12px 0 16px; font-weight: 900; letter-spacing: -.02em; }
+  h1 em { font-style: normal; color: var(--verde-texto); }
+  .lead { font-size: 18px; line-height: 1.55; color: var(--texto-2); margin: 0 0 22px; max-width: 34em; }
+
+  .palco { position: relative; height: min(72vh, 680px); border-radius: 28px; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #eef3ea 60%, #e2eadc 100%); }
+  .palco .carregando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--texto-2); font-weight: 700; }
+  .rotulo-3d { background: var(--escuro); color: #fff; font: 700 12px "Urbanist", sans-serif; padding: 5px 10px; border-radius: 999px;
+    border: 2px solid var(--verde); white-space: nowrap; transform: translateY(-18px); box-shadow: 0 4px 14px rgba(22,35,14,.25); }
+
+  .controles { display: grid; gap: 16px; }
+  .grupo-controle .titulo { font-size: 11px; letter-spacing: .2em; font-weight: 800; text-transform: uppercase; color: var(--texto-2); margin-bottom: 8px; }
+  .botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { font: 700 14px "Urbanist", sans-serif; border: 1.5px solid var(--borda); background: #fff; color: var(--escuro);
+    padding: 9px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: .15s; }
+  button:hover { border-color: var(--verde); }
+  button.ativo { background: var(--escuro); color: #fff; border-color: var(--escuro); }
+  button .ponto { width: 9px; height: 9px; border-radius: 50%; }
+  input[type=range] { width: 100%; accent-color: var(--verde); }
+
+  .impressao { padding: 3vw 6vw 5vw; display: grid; grid-template-columns: 1fr 1.3fr; gap: 3vw; }
+  .impressao h2 { font-size: 32px; margin: 8px 0 12px; font-weight: 900; }
+  .impressao p { color: var(--texto-2); line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--borda); border-radius: 16px; overflow: hidden; font-size: 14px; }
+  th { text-align: left; background: var(--escuro); color: #fff; padding: 10px 12px; font-size: 12px; letter-spacing: .04em; }
+  td { padding: 9px 12px; border-top: 1px solid var(--borda); }
+  td a { color: var(--verde-texto); font-weight: 800; text-decoration: none; }
+  .cor { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-right: 6px; border: 1px solid rgba(0,0,0,.15); }
+  .dicas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+  .dica { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+  .dica b { display: block; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--verde-texto); margin-bottom: 4px; }
+
+  @media (max-width: 900px) {
+    .hero, .impressao { grid-template-columns: 1fr; }
+    .palco { height: 62vh; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<header>
+  <img src="assets/logo-claro.svg" alt="Olho na Via">
+  <span>Dispositivo IoT · modelo 3D</span>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="kicker">O sensor que decide sozinho</div>
+    <h1>Um fiscal da cidade em <em>cada ônibus</em>.</h1>
+    <p class="lead">Câmera, acelerômetro, GPS, LoRa e bateria numa caixa de 14 cm presa ao para-brisa. Ele percebe o buraco, a rua alagada e o semáforo apagado, avisa na hora e envia o evento para a Prefeitura, com ou sem internet.</p>
+
+    <div class="controles">
+      <div class="grupo-controle">
+        <div class="titulo">Estado da via</div>
+        <div class="botoes" id="estados">
+          <button data-estado="NORMAL" class="ativo"><span class="ponto" style="background:#72C000"></span>Normal</button>
+          <button data-estado="ATENCAO"><span class="ponto" style="background:#F2B705"></span>Atenção</button>
+          <button data-estado="CRITICO"><span class="ponto" style="background:#D9372B"></span>Crítico</button>
+          <button data-estado="FALHA"><span class="ponto" style="background:#7D8790"></span>Falha</button>
+        </div>
+      </div>
+      <div class="grupo-controle">
+        <div class="titulo">Por dentro</div>
+        <input type="range" id="explosao" min="0" max="1" step="0.01" value="0" aria-label="Vista explodida">
+      </div>
+      <div class="grupo-controle">
+        <div class="titulo">Versão</div>
+        <div class="botoes" id="suportes">
+          <button data-suporte="onibus" class="ativo">Unidade Ônibus</button>
+          <button data-suporte="kit">Kit Cidadão</button>
+        </div>
+      </div>
+      <div class="grupo-controle">
+        <div class="titulo">Vista</div>
+        <div class="botoes">
+          <button data-vista="traseira">Display</button>
+          <button data-vista="frontal">Câmera</button>
+          <button id="girar" class="ativo">Girar</button>
+          <button id="baixar-glb">Baixar GLB</button>
+          <button id="baixar-png">Baixar imagem</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="palco" id="palco"><div class="carregando">Carregando o modelo 3D…</div></div>
+</section>
+
+<section class="impressao">
+  <div>
+    <div class="kicker">Faça o seu</div>
+    <h2>Arquivos para impressão 3D</h2>
+    <p>O gabinete é um único sólido cortado em três peças que se encaixam: tampa frontal, anel verde e tampa traseira. Todas as malhas são fechadas e já saem orientadas para a mesa, com a face externa para baixo.</p>
+    <div class="dicas">
+      <div class="dica"><b>Material</b>PETG ou ASA, que aguentam o sol e o calor do para-brisa.</div>
+      <div class="dica"><b>Fatiamento</b>Camada de 0,2 mm, 4 perímetros, 25% de preenchimento, sem suporte.</div>
+      <div class="dica"><b>Fixação</b>4 parafusos M3 × 30 escareados e 4 insertos M3 de 4 mm na tampa traseira.</div>
+      <div class="dica"><b>Logo multicor</b>Importe a tampa traseira e as duas peças do logo como um só objeto.</div>
+    </div>
+  </div>
+  <div>
+    <table>
+      <thead><tr><th>Peça</th><th>Cor sugerida</th><th>Arquivo</th></tr></thead>
+      <tbody>
+        <tr><td>Tampa frontal (câmera)</td><td><span class="cor" style="background:#16230E"></span>verde-escuro</td><td><a href="stl/tampa-frontal.stl" download>tampa-frontal.stl</a></td></tr>
+        <tr><td>Anel verde central</td><td><span class="cor" style="background:#72C000"></span>verde</td><td><a href="stl/anel-verde.stl" download>anel-verde.stl</a></td></tr>
+        <tr><td>Tampa traseira (display)</td><td><span class="cor" style="background:#16230E"></span>verde-escuro</td><td><a href="stl/tampa-traseira.stl" download>tampa-traseira.stl</a></td></tr>
+        <tr><td>Anel da câmera</td><td><span class="cor" style="background:#72C000"></span>verde</td><td><a href="stl/anel-camera.stl" download>anel-camera.stl</a></td></tr>
+        <tr><td>Anel do botão</td><td><span class="cor" style="background:#72C000"></span>verde</td><td><a href="stl/anel-botao.stl" download>anel-botao.stl</a></td></tr>
+        <tr><td>Logo: centro (multicor)</td><td><span class="cor" style="background:#F7FAFC"></span>branco</td><td><a href="stl/logo-centro.stl" download>logo-centro.stl</a></td></tr>
+        <tr><td>Logo: asas (multicor)</td><td><span class="cor" style="background:#72C000"></span>verde</td><td><a href="stl/logo-asas.stl" download>logo-asas.stl</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script type="module">
+  import { criarVisualizador } from './visualizador.js';
+
+  const palco = document.getElementById('palco');
+  const v = await criarVisualizador(palco, { autoRotacao: true });
+  palco.querySelector('.carregando').remove();
+  window.visualizador = v;
+
+  const marcar = (grupo, botao) => {
+    grupo.querySelectorAll('button').forEach((b) => b.classList.toggle('ativo', b === botao));
+  };
+
+  document.getElementById('estados').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    v.definirEstado(b.dataset.estado);
+    marcar(e.currentTarget, b);
+  });
+  document.getElementById('suportes').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    v.definirSuporte(b.dataset.suporte);
+    marcar(e.currentTarget, b);
+  });
+  document.getElementById('explosao').addEventListener('input', (e) => {
+    const t = Number(e.target.value);
+    v.definirExplosao(t);
+    if (t > 0.5) v.definirSuporte('nenhum');
+    else v.definirSuporte(document.querySelector('#suportes .ativo').dataset.suporte);
+  });
+  document.querySelectorAll('[data-vista]').forEach((b) => b.addEventListener('click', () => v.irPara(b.dataset.vista)));
+
+  const girar = document.getElementById('girar');
+  girar.addEventListener('click', () => {
+    const ativo = !girar.classList.contains('ativo');
+    girar.classList.toggle('ativo', ativo);
+    v.definirAutoRotacao(ativo);
+  });
+
+  const baixar = (url, nome) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nome;
+    a.click();
+  };
+  document.getElementById('baixar-glb').addEventListener('click', async () => {
+    const blob = await v.exportarGLB();
+    baixar(URL.createObjectURL(blob), 'olho-na-via-dispositivo.glb');
+  });
+  document.getElementById('baixar-png').addEventListener('click', () => baixar(v.capturarImagem(), 'olho-na-via-dispositivo.png'));
+</script>
+</body>
+</html>
