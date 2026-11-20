@@ -1,0 +1,10 @@
+{
+  "tamanho": 480,
+  "classes": [
+    "buraco",
+    "semaforo_apagado",
+    "alagamento",
+    "faixa_apagada",
+    "semaforo_aceso"
+  ]
+}

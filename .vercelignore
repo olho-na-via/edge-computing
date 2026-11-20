@@ -1,0 +1,10 @@
+# Deploy do simulador na Vercel (Root Directory = simulador).
+# Ele lê ../sketch.ino e ../modelo-3d pelo alias $edge: só isso sobe junto.
+/*
+!/simulador
+!/modelo-3d
+!/sketch.ino
+node_modules
+/simulador/build
+/simulador/.svelte-kit
+/modelo-3d/stl

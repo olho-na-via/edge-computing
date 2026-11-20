@@ -1,0 +1,193 @@
+/* Identidade visual do Olho na Via: mesmas cores e curvas do app (frontend/app/app.css)
+   e a tipografia Urbanist da documentação e do modelo 3D desta disciplina. */
+
+@font-face {
+	font-family: 'Urbanist';
+	src: url('./lib/assets/Urbanist-VariableFont_wght.ttf') format('truetype');
+	font-weight: 100 900;
+	font-display: swap;
+}
+
+:root {
+	/* Primária: #72C000 = 500 */
+	--primary-50: #f2fceb;
+	--primary-100: #e3f8d5;
+	--primary-200: #cdf2b2;
+	--primary-300: #afe782;
+	--primary-400: #8cd547;
+	--primary-500: #72c000;
+	--primary-600: #5a9a00;
+	--primary-700: #457800;
+	--primary-800: #345d00;
+	--primary-900: #274700;
+
+	/* Secundária: #16230E = 950 */
+	--secondary-50: #f6f9f4;
+	--secondary-100: #ebf3e7;
+	--secondary-200: #d9e7d2;
+	--secondary-300: #c2d7b7;
+	--secondary-400: #a6c198;
+	--secondary-500: #8eaa7e;
+	--secondary-600: #6f8961;
+	--secondary-700: #556b48;
+	--secondary-800: #405236;
+	--secondary-900: #2f3e27;
+	--secondary-950: #16230e;
+
+	--background: #f7fafc;
+	--branco: #ffffff;
+
+	/* Estados da via */
+	--critico: #c2352b;
+	--critico-fundo: #fde9e6;
+	--atencao: #7a5f00;
+	--atencao-marca: #e8bf1a;
+	--atencao-fundo: #fff6cc;
+	--ok: #3f7300;
+	--ok-fundo: #e8f5d6;
+	--falha: #4a5560;
+	--falha-fundo: #eceff1;
+	--azul: #2a62c9;
+	--azul-fundo: #eaf1fb;
+
+	--ease-saida: cubic-bezier(0.23, 1, 0.32, 1);
+	--ease-gaveta: cubic-bezier(0.32, 0.72, 0, 1);
+
+	--fonte: 'Urbanist', ui-sans-serif, system-ui, sans-serif;
+	--fonte-codigo: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+
+	--raio: 1rem;
+	--raio-menor: 0.75rem;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-tap-highlight-color: transparent;
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	background: var(--background);
+	color: var(--secondary-950);
+	font-family: var(--fonte);
+	font-size: 16px;
+	line-height: 1.45;
+	/* A página não rola nem dá pull-to-refresh: quem rola são os painéis */
+	overflow: hidden;
+	overscroll-behavior: none;
+}
+
+h1,
+h2,
+h3,
+p {
+	margin: 0;
+}
+
+button,
+input,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+button:disabled {
+	cursor: not-allowed;
+}
+
+:focus-visible {
+	outline: 2px solid var(--primary-600);
+	outline-offset: 2px;
+}
+
+/* Rótulo pequeno em caixa alta, usado acima de grupos de controles */
+.kicker {
+	font-size: 0.6875rem;
+	font-weight: 800;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--secondary-700);
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+.botao {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 2.75rem;
+	padding: 0 1rem;
+	border: 1.5px solid var(--secondary-200);
+	border-radius: 999px;
+	background: var(--branco);
+	font-size: 0.9375rem;
+	font-weight: 700;
+	transition:
+		transform 150ms var(--ease-saida),
+		border-color 150ms,
+		background-color 150ms;
+}
+
+.botao:active:not(:disabled) {
+	transform: scale(0.97);
+}
+
+.botao:disabled {
+	opacity: 0.5;
+}
+
+.botao.primario {
+	border-color: var(--secondary-950);
+	background: var(--secondary-950);
+	color: var(--branco);
+}
+
+.botao.destaque {
+	border-color: var(--primary-500);
+	background: var(--primary-500);
+	color: var(--secondary-950);
+}
+
+.botao.pequeno {
+	min-height: 2.25rem;
+	padding: 0 0.75rem;
+	font-size: 0.8125rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.botao:hover:not(:disabled) {
+		border-color: var(--primary-500);
+	}
+	.botao.primario:hover:not(:disabled) {
+		border-color: var(--secondary-800);
+		background: var(--secondary-800);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
