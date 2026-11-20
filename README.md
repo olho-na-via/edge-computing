@@ -8,6 +8,21 @@ Em São Paulo, um buraco, um alagamento ou um semáforo apagado só entra na fil
 **Simulador online:** [olho-na-via-simulador.vercel.app](https://olho-na-via-simulador.vercel.app)
 **Documentação técnica:** [Documentacao Tecnica - Edge - Olho na Via.pdf](<Documentacao Tecnica - Edge - Olho na Via.pdf>)
 
+## Ficha da CitizenTech
+
+| Campo | Olho na Via |
+| --- | --- |
+| Nome da CitizenTech | **Olho na Via**: fiscalização urbana com IA |
+| Cidade e bairro | São Paulo (SP). Piloto proposto: linhas de ônibus que cruzam a região central e a Av. Paulista (entorno da FIAP Paulista) e seguem até bairros da periferia, em duas subprefeituras a definir com a Prefeitura. Os dados de demonstração usam Butantã, Lapa e Pinheiros. |
+| Cidadão beneficiado | Quem usa a rua todos os dias: passageiros de ônibus, motociclistas e entregadores, ciclistas, pedestres (principalmente idosos e pessoas com deficiência) e moradores de áreas que alagam. Também o gestor público, que precisa decidir onde agir primeiro. |
+| Problema, em uma frase | Em São Paulo, buracos, alagamentos, faixas apagadas e semáforos apagados só entram na fila de reparo quando alguém reclama, e ninguém confere de forma sistemática se o conserto foi bem feito. |
+| Como funciona | Um dispositivo IoT com câmera, acelerômetro e GPS, instalado em ônibus, e a análise das câmeras do Smart Sampa detectam problemas com IA. O sistema abre o chamado no órgão responsável, prioriza pela gravidade e, quando o ônibus passa de novo, confirma se o reparo foi feito. Também avisa cidadãos e ambulâncias sobre vias alagadas ou bloqueadas. Cidadãos contribuem pelo app e com um kit próprio em troca de créditos. |
+| O que cada parte faz | **Sensor (Edge/ESP32, este repositório):** mede impacto, luz e posição, recebe as detecções da câmera com IA e decide o estado sozinho, com ou sem internet · **Lógica (Python):** organiza os chamados, calcula a prioridade e guarda os dados · **Matemática:** modela o crescimento do buraco e o custo acumulado do atraso · **Interface e Interação (React):** app do cidadão e painel do gestor · **Experiência:** jornada, requisitos e roadmap · **Pitch:** a história em 3 minutos. |
+| Link do repositório | Edge: [github.com/olho-na-via/edge-computing](https://github.com/olho-na-via/edge-computing) · Simulador: [olho-na-via-simulador.vercel.app](https://olho-na-via-simulador.vercel.app) · Frontend: [github.com/olho-na-via/frontend](https://github.com/olho-na-via/frontend) · Backend: [github.com/olho-na-via/backend](https://github.com/olho-na-via/backend) |
+| Indicador de impacto | **Tempo entre o surgimento do problema e o reparo confirmado** (meta: de 6 para no máximo 3 dias nas áreas piloto) e **% de problemas detectados antes de qualquer reclamação** (meta: 60% ou mais). |
+| ODS conectados | `ODS 11` `ODS 9` `ODS 3` `ODS 13` `ODS 10` `ODS 16 · complementar` |
+| Equipe | **Erick Nathan Capito Pereira** · RM573635 |
+
 ## O dispositivo
 
 [![Modelo 3D do dispositivo](docs/videos/01-modelo-3d.gif)](docs/videos/01-modelo-3d.mp4)
