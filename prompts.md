@@ -77,7 +77,9 @@ Os pedidos estão transcritos como foram enviados.
 >
 > Logo em seguida, me ensine a executar a aplicação com essas imagens de teste
 
-**Resposta:** a ferramenta montou o dataset de 7.231 imagens de treino a partir do RDD2022, do S2TLD e do City Risks e treinou um YOLO11s. Para separar o semáforo apagado do aceso, acrescentou uma checagem de cor. Os resultados por classe e as limitações estão no `visao-computacional/README.md`.
+**Datasets:** antes deste pedido, eu já tinha pré-selecionado os três datasets do treino: RDD2022, S2TLD e City Risks. A liberdade dada no prompt era para a forma de montar e treinar o modelo a partir deles.
+
+**Resposta:** a ferramenta montou o dataset de 7.231 imagens de treino a partir do RDD2022, do S2TLD e do City Risks, os datasets que eu pré-selecionei, e treinou um YOLO11s. Para separar o semáforo apagado do aceso, acrescentou uma checagem de cor. Os resultados por classe e as limitações estão no `visao-computacional/README.md`.
 
 ### 4.4 Simulador web
 
