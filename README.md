@@ -10,9 +10,9 @@ Em São Paulo, um buraco, um alagamento ou um semáforo apagado só entra na fil
 
 ## O dispositivo
 
-[![O dispositivo físico](docs/videos/01-dispositivo.gif)](docs/videos/01-dispositivo.mp4)
+[![Modelo 3D do dispositivo](docs/videos/01-modelo-3d.gif)](docs/videos/01-modelo-3d.mp4)
 
-Na frente fica a câmera, que olha para a rua. Atrás ficam o display LCD, os LEDs e a chave liga/desliga, que avisam o motorista e quem está por perto. O gabinete foi modelado em 3D (pasta [`modelo-3d/`](modelo-3d)).
+Na frente fica a câmera, que olha para a rua. Atrás ficam o display LCD, os LEDs e a chave liga/desliga, que avisam o motorista e quem está por perto. O vídeo mostra o modelo 3D passando pelos quatro estados e a vista explodida do gabinete. O modelo e as peças para impressão estão em [`modelo-3d/`](modelo-3d).
 
 | Quem sofre | Onde fica | ODS |
 |---|---|---|
