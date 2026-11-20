@@ -1,0 +1,10 @@
+.vercel
+
+# Fora do repositório: material de gravação, fontes da documentação e arquivos do Wokwi
+/VIDEO/
+/video-gravacao/
+/documentacao/
+/.claude/
+/ROTEIRO_VIDEO.md
+/diagram.json
+/libraries.txt
