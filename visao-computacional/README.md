@@ -96,6 +96,16 @@ python treino\treinar.py             # copia o melhor peso para modelos\olho_na_
 
 Se o treino for interrompido, `python treino\treinar.py --continuar` retoma do último checkpoint.
 
+### Exportar para o navegador
+
+O simulador web (`../simulador`) roda este mesmo modelo no navegador do celular, com o onnxruntime-web. Depois de treinar de novo, gere o arquivo ONNX:
+
+```powershell
+python treino\exportar_onnx.py       # grava ..\simulador\static\modelos\olho_na_via.onnx (480 px)
+```
+
+Na foto `testes-professor\08-alagamento-1.jpg`, o modelo exportado dá a mesma confiança do original (0,79), no Python e no navegador.
+
 ## Resultados
 
 Validação em 1.536 imagens que o modelo não viu no treino (30 épocas, YOLO11s, 768 px):

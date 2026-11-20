@@ -1,6 +1,8 @@
 // Modelo 3D completo do dispositivo Olho na Via para o site (three.js).
 // Carrega o gabinete gerado por gerar_stl.mjs (modelo/gabinete.glb) e monta a eletrônica interna,
 // o display, os LEDs, a antena e os suportes. Unidade: milímetro.
+// Dois modos de uso: definirEstado() mostra um estado fixo (landing page) e definirAtuadores()
+// recebe o LCD, os LEDs, o buzzer e a chave liga/desliga de fora, em tempo real (simulador do firmware).
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -9,7 +11,7 @@ import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 export const ESTADOS = {
-  NORMAL: { linha1: 'NORMAL   ONLINE', linha2: '0.02g 0cm L76%', led: 'verde' },
+  NORMAL: { linha1: 'NORMAL   ONLINE', linha2: '0.02g Luz 76%', led: 'verde' },
   ATENCAO: { linha1: 'ATENCAO  ONLINE', linha2: 'Irregular 0.60g', led: 'amarelo' },
   CRITICO: { linha1: 'CRITICO  ONLINE', linha2: 'Buraco 1.50g', led: 'vermelho' },
   FALHA: { linha1: 'FALHA    ONLINE', linha2: 'GPS sem sinal', led: 'amarelo-piscando' },
@@ -18,8 +20,12 @@ export const ESTADOS = {
 const CORES_LED = { azul: 0x3d7bff, vermelho: 0xff2a1a, amarelo: 0xffc21a, verde: 0x7dff1a };
 const LEDS = [['verde', -24], ['amarelo', -8], ['vermelho', 8], ['azul', 24]];
 
-function criarMateriais() {
-  const fisico = (cor, extra = {}) => new THREE.MeshPhysicalMaterial({ color: cor, roughness: 0.6, ...extra });
+// leve = sem transmissão de luz nos acrílicos (um passe de renderização a menos, para celulares)
+function criarMateriais(leve = false) {
+  const fisico = (cor, extra = {}) => {
+    if (leve) delete extra.transmission;
+    return new THREE.MeshPhysicalMaterial({ color: cor, roughness: 0.6, ...extra });
+  };
   const padrao = (cor, extra = {}) => new THREE.MeshStandardMaterial({ color: cor, roughness: 0.6, ...extra });
   return {
     corpo: fisico(0x16230e, { roughness: 0.78, clearcoat: 0.12, clearcoatRoughness: 0.7 }),
@@ -114,35 +120,30 @@ function rotulo(texto) {
 
 // ---------- display LCD 16x2 com fonte 5x7 ----------
 
-const FONTE = {
-  ' ': '00000,00000,00000,00000,00000,00000,00000',
-  '0': '01110,10001,10011,10101,11001,10001,01110', '1': '00100,01100,00100,00100,00100,00100,01110',
-  '2': '01110,10001,00001,00010,00100,01000,11111', '3': '11111,00010,00100,00010,00001,10001,01110',
-  '4': '00010,00110,01010,10010,11111,00010,00010', '5': '11111,10000,11110,00001,00001,10001,01110',
-  '6': '00110,01000,10000,11110,10001,10001,01110', '7': '11111,00001,00010,00100,01000,01000,01000',
-  '8': '01110,10001,10001,01110,10001,10001,01110', '9': '01110,10001,10001,01111,00001,00010,01100',
-  A: '01110,10001,10001,10001,11111,10001,10001', B: '11110,10001,10001,11110,10001,10001,11110',
-  C: '01110,10001,10000,10000,10000,10001,01110', D: '11100,10010,10001,10001,10001,10010,11100',
-  E: '11111,10000,10000,11110,10000,10000,11111', F: '11111,10000,10000,11110,10000,10000,10000',
-  G: '01110,10001,10000,10111,10001,10001,01111', H: '10001,10001,10001,11111,10001,10001,10001',
-  I: '01110,00100,00100,00100,00100,00100,01110', L: '10000,10000,10000,10000,10000,10000,11111',
-  M: '10001,11011,10101,10101,10001,10001,10001', N: '10001,10001,11001,10101,10011,10001,10001',
-  O: '01110,10001,10001,10001,10001,10001,01110', P: '11110,10001,10001,11110,10000,10000,10000',
-  R: '11110,10001,10001,11110,10100,10010,10001', S: '01111,10000,10000,01110,00001,00001,11110',
-  T: '11111,00100,00100,00100,00100,00100,00100', U: '10001,10001,10001,10001,10001,10001,01110',
-  V: '10001,10001,10001,10001,10001,01010,00100',
-  a: '00000,00000,01110,00001,01111,10001,01111', b: '10000,10000,10110,11001,10001,10001,11110',
-  c: '00000,00000,01110,10000,10000,10001,01110', d: '00001,00001,01101,10011,10001,10001,01111',
-  e: '00000,00000,01110,10001,11111,10000,01110', f: '00110,01001,01000,11100,01000,01000,01000',
-  g: '00000,01111,10001,10001,01111,00001,01110', h: '10000,10000,10110,11001,10001,10001,10001',
-  i: '00100,00000,01100,00100,00100,00100,01110', l: '01100,00100,00100,00100,00100,00100,01110',
-  m: '00000,00000,11010,10101,10101,10001,10001', n: '00000,00000,10110,11001,10001,10001,10001',
-  o: '00000,00000,01110,10001,10001,10001,01110', p: '00000,00000,11110,10001,11110,10000,10000',
-  r: '00000,00000,10110,11001,10000,10000,10000', s: '00000,00000,01110,10000,01110,00001,11110',
-  u: '00000,00000,10001,10001,10001,10011,01101', v: '00000,00000,10001,10001,10001,01010,00100',
-  z: '00000,00000,11111,00010,00100,01000,11111', '.': '00000,00000,00000,00000,00000,01100,01100',
-  '%': '11000,11001,00010,00100,01000,10011,00011', '-': '00000,00000,00000,11111,00000,00000,00000',
-};
+// Fonte 5x8 do LCD (ASCII 32 a 126). Cada caractere tem 5 colunas de 2 dígitos hexadecimais;
+// em cada coluna, o bit 0 é a linha de cima.
+const FONTE_LCD =
+  '000000000000005F00000007000700147F147F14242A7F2A12231308646236495620500008070300' +
+  '001C2241000041221C002A1C7F1C2A08083E08080080703000080808080800006060002010080402' +
+  '3E5149453E00427F400072494949462141494D331814127F1027454545393C4A4949314121110907' +
+  '3649494936464949291E000014000000403400000008142241141414141400412214080201590906' +
+  '3E415D594E7C1211127C7F494949363E414141227F4141413E7F494949417F090909013E41415173' +
+  '7F0808087F00417F41002040413F017F081422417F404040407F021C027F7F0408107F3E4141413E' +
+  '7F090909063E4151215E7F09192946264949493203017F01033F4040403F1F2040201F3F4038403F' +
+  '631408146303047804036159494D43007F4141410204081020004141417F04020102044040404040' +
+  '000307080020545478407F284444383844444428384444287F385454541800087E090218A4A49C78' +
+  '7F0804047800447D40002040403D007F1028440000417F40007C047804787C080404783844444438' +
+  'FC1824241818242418FC7C08040408485454542404043F44243C4040207C1C2040201C3C4030403C' +
+  '44281028444C9090907C4464544C440008364100000077000000413608000201020402';
+
+// Devolve as 5 colunas do caractere. Letras acentuadas perdem o acento; o que não existe vira espaço.
+export function colunasDoCaractere(caractere) {
+  const codigo = (caractere || ' ').normalize('NFD').charCodeAt(0);
+  const indice = codigo >= 32 && codigo <= 126 ? codigo - 32 : 0;
+  const colunas = [];
+  for (let c = 0; c < 5; c++) colunas.push(parseInt(FONTE_LCD.substr((indice * 5 + c) * 2, 2), 16));
+  return colunas;
+}
 
 function criarTelaLcd() {
   if (typeof document === 'undefined') return { textura: null, escrever() {} };
@@ -154,10 +155,16 @@ function criarTelaLcd() {
   textura.colorSpace = THREE.SRGBColorSpace;
   textura.anisotropy = 8;
 
-  function escrever(linha1, linha2) {
+  let textoAtual = null;
+
+  // aceso = false: luz de fundo apagada (dispositivo desligado)
+  function escrever(linha1, linha2, aceso = true) {
+    const novoTexto = `${aceso}\n${linha1}\n${linha2}`;
+    if (novoTexto === textoAtual) return;
+    textoAtual = novoTexto;
     const fundo = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    fundo.addColorStop(0, '#b4d84a');
-    fundo.addColorStop(1, '#93c02f');
+    fundo.addColorStop(0, aceso ? '#b4d84a' : '#4a5a3c');
+    fundo.addColorStop(1, aceso ? '#93c02f' : '#3d4b31');
     ctx.fillStyle = fundo;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     const passo = 10.4;
@@ -167,10 +174,10 @@ function criarTelaLcd() {
     [linha1, linha2].forEach((linha, l) => {
       const texto = linha.padEnd(16, ' ').slice(0, 16);
       for (let c = 0; c < 16; c++) {
-        const linhasGlifo = (FONTE[texto[c]] || FONTE[' ']).split(',');
+        const colunas = colunasDoCaractere(texto[c]);
         for (let gy = 0; gy < 8; gy++) {
           for (let gx = 0; gx < 5; gx++) {
-            const aceso = gy < 7 && linhasGlifo[gy][gx] === '1';
+            const aceso = (colunas[gx] >> gy) & 1;
             ctx.fillStyle = aceso ? '#16260a' : 'rgba(40, 70, 0, 0.10)';
             ctx.fillRect(margemX + (c * 6 + gx) * passo, margemY + (l * 9 + gy) * passo, ponto, ponto);
           }
@@ -290,8 +297,8 @@ function moduloLcd(mat, tela) {
 
 // ---------- montagem ----------
 
-export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinete.glb', import.meta.url).href } = {}) {
-  const mat = criarMateriais();
+export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinete.glb', import.meta.url).href, leve = false } = {}) {
+  const mat = criarMateriais(leve);
   const tela = criarTelaLcd();
   const raiz = new THREE.Group();
   raiz.name = 'olho-na-via';
@@ -360,7 +367,7 @@ export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinet
   for (const [cor, x] of LEDS) {
     const corLed = CORES_LED[cor];
     const ledMat = new THREE.MeshPhysicalMaterial({
-      color: corLed, emissive: corLed, emissiveIntensity: 0, roughness: 0.15, transmission: 0.3, transparent: true, opacity: 0.92,
+      color: corLed, emissive: corLed, emissiveIntensity: 0, roughness: 0.15, transmission: leve ? 0 : 0.3, transparent: true, opacity: 0.92,
     });
     const corpoLed = new THREE.Group();
     corpoLed.add(cilindro(2.9, 1, ledMat, 'z', x, -6, 19.5, 24));
@@ -376,12 +383,23 @@ export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinet
     leds[cor] = { material: ledMat, halo };
   }
   traseira.add(cilindro(6, 8, mat.plasticoPreto, 'z', -50, -30, 17.6, 32));
-  const botao = new THREE.Group();
-  botao.add(cilindro(7.5, 1.4, mat.metal, 'z', 50, -30, 25.7, 40));
-  botao.add(cilindro(4.7, 2.4, mat.caboAzul, 'z', 50, -30, 27.6, 32));
-  botao.add(cilindro(6, 17, mat.plasticoPreto, 'z', 50, -30, 13.1, 32));
-  botao.add(cilindro(8, 1.5, mat.metal, 'z', 50, -30, 20.8, 6));
-  traseira.add(botao);
+  // Ondas sobre a grade do buzzer, visíveis só enquanto ele toca
+  const haloBuzzer = new THREE.Sprite(new THREE.SpriteMaterial({ map: brilho, color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
+  haloBuzzer.position.set(-50, -30, 26);
+  haloBuzzer.scale.set(20, 20, 1);
+  traseira.add(haloBuzzer);
+  // Chave liga/desliga: gangorra redonda de 12 mm, no mesmo furo do gabinete. O lado "I" afunda quando ligada
+  const chave = new THREE.Group();
+  chave.name = 'chaveLigaDesliga';
+  chave.add(cilindro(7.5, 1.4, mat.plasticoPreto, 'z', 50, -30, 25.7, 40));
+  const gangorra = new THREE.Group();
+  gangorra.position.set(50, -30, 26.9);
+  gangorra.add(bloco(9, 5.6, 2.6, mat.branco, 0, 0, 0, 0.9));
+  gangorra.add(bloco(0.8, 3, 0.3, mat.verde, 2.7, 0, 1.35));
+  chave.add(gangorra);
+  chave.add(cilindro(6, 17, mat.plasticoPreto, 'z', 50, -30, 13.1, 32));
+  chave.add(cilindro(8, 1.5, mat.metal, 'z', 50, -30, 20.8, 6));
+  traseira.add(chave);
   // Antena LoRa com conector SMA no topo
   const antena = new THREE.Group();
   antena.add(cilindro(4.6, 2, mat.ouro, 'y', -52, 48.5, 12, 6));
@@ -446,7 +464,7 @@ export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinet
   adicionarRotulo('Bateria 18650', radio, 30, -36, -5);
   adicionarRotulo('Display 16x2', lcdGrupo, 0, 40, 18);
   adicionarRotulo('LEDs de estado', traseira, -40, -6, 30);
-  adicionarRotulo('Botão Reportar', traseira, 50, -40, 30);
+  adicionarRotulo('Chave liga/desliga', traseira, 50, -40, 30);
   adicionarRotulo('Conversor 24 V → 5 V', camera, -49, 46, -20);
   for (const r of rotulos) r.visible = false;
 
@@ -456,11 +474,24 @@ export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinet
   let explosao = 0;
   let suporte = 'onibus';
   let inicioFlash = -10;
+  let externo = null;
+  let buzzerTocando = false;
+  let chaveLigada = true;
+  const orientacaoAlvo = new THREE.Quaternion();
+  const INCLINACAO_CHAVE = 0.2;
+
+  function acenderTela(aceso) {
+    lcd.display.material.emissiveIntensity = aceso ? 0.55 : 0.06;
+  }
 
   function definirEstado(estado) {
+    externo = null;
+    buzzerTocando = false;
+    chaveLigada = true;
     estadoAtual = ESTADOS[estado] ? estado : 'NORMAL';
     const e = ESTADOS[estadoAtual];
     tela.escrever(e.linha1, e.linha2);
+    acenderTela(true);
     if (estadoAtual === 'CRITICO') inicioFlash = performance.now() / 1000;
   }
 
@@ -485,20 +516,46 @@ export async function criarDispositivo({ urlGabinete = new URL('./modelo/gabinet
     caboEnergia.visible = suporte === 'onibus' && explosao < 0.02;
   }
 
+  // Atuadores comandados de fora (simulador): cada chamada troca só o que foi informado.
+  //   lcd: [linha1, linha2] · leds: { verde, amarelo, vermelho, azul } de 0 a 1 · buzzer: true/false
+  //   chave: posição da chave liga/desliga (true = ligada); desligada, a luz de fundo do LCD apaga
+  function definirAtuadores({ lcd, leds: novosLeds, buzzer, chave: ligada } = {}) {
+    if (!externo) externo = { leds: { verde: 0, amarelo: 0, vermelho: 0, azul: 0 }, lcd: ['', ''] };
+    if (lcd) externo.lcd = [String(lcd[0] ?? ''), String(lcd[1] ?? '')];
+    if (ligada !== undefined) chaveLigada = Boolean(ligada);
+    tela.escrever(externo.lcd[0], externo.lcd[1], chaveLigada);
+    acenderTela(chaveLigada);
+    if (novosLeds) Object.assign(externo.leds, novosLeds);
+    if (buzzer !== undefined) buzzerTocando = Boolean(buzzer);
+  }
+
+  // Inclina o dispositivo (radianos), para acompanhar a orientação do celular
+  function definirOrientacao(x = 0, y = 0, z = 0) {
+    orientacaoAlvo.setFromEuler(new THREE.Euler(x, y, z, 'YXZ'));
+  }
+
   function atualizar(tempo) {
-    const e = ESTADOS[estadoAtual];
-    for (const cor of Object.keys(leds)) acender(cor, 0);
-    if (e.led === 'amarelo-piscando') acender('amarelo', Math.floor(tempo * 2) % 2 === 0 ? 1 : 0);
-    else acender(e.led, 1);
-    if (estadoAtual === 'CRITICO') {
-      const fase = (tempo - inicioFlash) % 2.4;
-      acender('azul', fase < 0.3 ? 1 : 0);
+    if (externo) {
+      for (const cor of Object.keys(leds)) acender(cor, Number(externo.leds[cor]) || 0);
+    } else {
+      const e = ESTADOS[estadoAtual];
+      for (const cor of Object.keys(leds)) acender(cor, 0);
+      if (e.led === 'amarelo-piscando') acender('amarelo', Math.floor(tempo * 2) % 2 === 0 ? 1 : 0);
+      else acender(e.led, 1);
+      if (estadoAtual === 'CRITICO') {
+        const fase = (tempo - inicioFlash) % 2.4;
+        acender('azul', fase < 0.3 ? 1 : 0);
+      }
     }
+    gangorra.rotation.y += ((chaveLigada ? INCLINACAO_CHAVE : -INCLINACAO_CHAVE) - gangorra.rotation.y) * 0.4;
+    haloBuzzer.material.opacity = buzzerTocando ? 0.3 + 0.3 * Math.sin(tempo * 38) : 0;
+    haloBuzzer.scale.setScalar(buzzerTocando ? 20 + 5 * Math.sin(tempo * 38) : 20);
+    if (raiz.quaternion.angleTo(orientacaoAlvo) > 0.0005) raiz.quaternion.slerp(orientacaoAlvo, 0.14);
   }
 
   definirEstado('NORMAL');
   definirExplosao(0);
   definirSuporte('onibus');
 
-  return { grupo: raiz, definirEstado, definirExplosao, definirSuporte, atualizar, rotulos, pecas };
+  return { grupo: raiz, definirEstado, definirAtuadores, definirOrientacao, definirExplosao, definirSuporte, atualizar, rotulos, pecas, chave };
 }

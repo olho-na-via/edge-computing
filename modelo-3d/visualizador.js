@@ -3,6 +3,8 @@
 //   import { criarVisualizador } from './visualizador.js';
 //   const v = await criarVisualizador(document.querySelector('#modelo'), { autoRotacao: true });
 //   v.definirEstado('CRITICO'); v.definirExplosao(1); v.definirSuporte('kit');
+// No simulador do firmware, os atuadores vêm de fora:
+//   v.definirAtuadores({ lcd: ['CRITICO  ONLINE', 'Buraco 1.20g'], leds: { vermelho: 1 }, buzzer: true, chave: true });
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -18,14 +20,19 @@ const VISTAS = {
 };
 
 export async function criarVisualizador(container, opcoes = {}) {
-  const { autoRotacao = true, fundoTransparente = true, urlGabinete } = opcoes;
+  // leve: sem sombras nem transmissão de luz (celulares) · ajustarZoom: afasta a câmera em telas estreitas
+  // aoChave(): toque na chave liga/desliga do modelo
+  // vista: nome de uma das VISTAS ou { posicao: [x, y, z], alvo: [x, y, z] } para a câmera inicial
+  const { autoRotacao = true, fundoTransparente = true, urlGabinete, leve = false, ajustarZoom = false, aoChave, vista } = opcoes;
+  const resolverVista = (v) => (typeof v === 'string' ? VISTAS[v] : v);
+  const vistaInicial = resolverVista(vista) || VISTAS.traseira;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: fundoTransparente, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, leve ? 1.5 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !leve;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   container.appendChild(renderer.domElement);
 
@@ -43,7 +50,7 @@ export async function criarVisualizador(container, opcoes = {}) {
   if (!fundoTransparente) cena.background = new THREE.Color(0xf7fafc);
 
   const camera = new THREE.PerspectiveCamera(30, 1, 5, 5000);
-  camera.position.set(...VISTAS.traseira.posicao);
+  camera.position.set(...vistaInicial.posicao);
 
   const principal = new THREE.DirectionalLight(0xffffff, 2.2);
   principal.position.set(160, 260, 220);
@@ -72,13 +79,35 @@ export async function criarVisualizador(container, opcoes = {}) {
   controles.dampingFactor = 0.08;
   controles.minDistance = 160;
   controles.maxDistance = 1100;
-  controles.target.set(...VISTAS.traseira.alvo);
+  controles.target.set(...vistaInicial.alvo);
   controles.autoRotate = autoRotacao;
   controles.autoRotateSpeed = 0.8;
   controles.addEventListener('start', () => { controles.autoRotate = false; });
 
-  const dispositivo = await criarDispositivo(urlGabinete ? { urlGabinete } : {});
+  const dispositivo = await criarDispositivo(urlGabinete ? { urlGabinete, leve } : { leve });
   cena.add(dispositivo.grupo);
+
+  // Toque na chave liga/desliga: só vale se ela for a primeira peça atingida (não vale por trás do gabinete)
+  const raio = new THREE.Raycaster();
+  const ponteiro = new THREE.Vector2();
+
+  function tocouNaChave(evento) {
+    const area = renderer.domElement.getBoundingClientRect();
+    ponteiro.set(((evento.clientX - area.left) / area.width) * 2 - 1, -((evento.clientY - area.top) / area.height) * 2 + 1);
+    raio.setFromCamera(ponteiro, camera);
+    const atingido = raio.intersectObject(dispositivo.grupo, true).find((i) => i.object.isMesh);
+    for (let o = atingido?.object; o; o = o.parent) if (o === dispositivo.chave) return true;
+    return false;
+  }
+
+  function aoApertar(evento) {
+    if (!aoChave || !tocouNaChave(evento)) return;
+    evento.stopPropagation();
+    aoChave();
+  }
+
+  // Fase de captura: o toque na chave não chega aos controles de órbita
+  container.addEventListener('pointerdown', aoApertar, true);
 
   function ajustarTamanho() {
     const { clientWidth: w, clientHeight: h } = container;
@@ -87,6 +116,7 @@ export async function criarVisualizador(container, opcoes = {}) {
     renderer.domElement.style.height = '100%';
     rotulosRenderer.setSize(w, h);
     camera.aspect = w / Math.max(h, 1);
+    if (ajustarZoom) camera.zoom = Math.min(1, camera.aspect / 1.1);
     camera.updateProjectionMatrix();
   }
   const observador = new ResizeObserver(ajustarTamanho);
@@ -119,8 +149,9 @@ export async function criarVisualizador(container, opcoes = {}) {
   }
   renderer.setAnimationLoop(animar);
 
+  // Aceita o nome de uma das VISTAS ou { posicao, alvo }
   function irPara(nome) {
-    const v = VISTAS[nome];
+    const v = resolverVista(nome);
     if (!v) return;
     transicaoCamera = {
       inicio: agora(),
@@ -145,6 +176,8 @@ export async function criarVisualizador(container, opcoes = {}) {
   return {
     dispositivo,
     definirEstado: (e) => dispositivo.definirEstado(e),
+    definirAtuadores: (a) => dispositivo.definirAtuadores(a),
+    definirOrientacao: (x, y, z) => dispositivo.definirOrientacao(x, y, z),
     definirExplosao: (t) => { explosaoAlvo = t; },
     definirSuporte: (s) => dispositivo.definirSuporte(s),
     definirAutoRotacao: (ativo) => { controles.autoRotate = ativo; },
@@ -154,6 +187,7 @@ export async function criarVisualizador(container, opcoes = {}) {
     destruir() {
       renderer.setAnimationLoop(null);
       observador.disconnect();
+      container.removeEventListener('pointerdown', aoApertar, true);
       renderer.dispose();
       container.innerHTML = '';
     },
