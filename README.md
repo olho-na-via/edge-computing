@@ -80,6 +80,8 @@ sketch.ino               # firmware do ESP32 (com o nome do integrante)
 simulador/               # simulador web (SvelteKit) que roda o firmware no navegador
 visao-computacional/     # treino e uso do modelo YOLO das quatro classes
 modelo-3d/               # gabinete 3D e peças para impressão (STL)
+libraries.txt            # bibliotecas do firmware
+prompts.md               # uso de IA no projeto
 COMPONENTES.md           # lista de peças e ligações da montagem física
 docs/videos/             # gravações do dispositivo e do simulador
 ```
@@ -96,6 +98,6 @@ bun run dev
 
 Abra `http://localhost:5173`, ligue o dispositivo e escolha um cenário de teste. Detalhes em [`simulador/README.md`](simulador/README.md).
 
-**Firmware na placa:** abra o `sketch.ino` no Arduino IDE, instale as bibliotecas Adafruit MPU6050, LiquidCrystal I2C e PubSubClient e grave no ESP32. Para a montagem física, troque `EMULAR_PERIFERICOS` para `0` e instale também a TinyGPSPlus (veja [`COMPONENTES.md`](COMPONENTES.md)).
+**Firmware na placa:** abra o `sketch.ino` no Arduino IDE, instale as bibliotecas do `libraries.txt` e grave no ESP32. Para a montagem física, troque `EMULAR_PERIFERICOS` para `0` e instale também a TinyGPSPlus (veja [`COMPONENTES.md`](COMPONENTES.md)).
 
 **Visão computacional:** veja [`visao-computacional/README.md`](visao-computacional/README.md).

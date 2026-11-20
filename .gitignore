@@ -1,10 +1,9 @@
 .vercel
 
-# Fora do repositório: material de gravação, fontes da documentação e arquivos do Wokwi
+# Fora do repositório: material de gravação, fontes da documentação e circuito do Wokwi
 /VIDEO/
 /video-gravacao/
 /documentacao/
 /.claude/
 /ROTEIRO_VIDEO.md
 /diagram.json
-/libraries.txt
